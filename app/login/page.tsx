@@ -34,7 +34,7 @@ export default function LoginPage() {
       if (!res.ok) { setError(data.error || 'Something went wrong.'); return }
       setCookie('visado_token', data.token || data.access_token, 30)
       setCookie('visado_user', JSON.stringify(data.user || {}), 30)
-      if (isSignup) {
+      if (isSignup || data.onboardingComplete === false) {
         router.push('/onboarding')
       } else {
         router.push('/dashboard')
