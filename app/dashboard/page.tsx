@@ -118,7 +118,6 @@ function DashboardInner() {
   const [loading, setLoading] = useState(true)
   const [taskLoading, setTaskLoading] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
-  const [creatingProject, setCreatingProject] = useState(false)
 
   useEffect(() => {
     const check = () => setIsMobile((window.screen?.width || 1440) <= 768)
@@ -139,44 +138,12 @@ function DashboardInner() {
       const res = await apiFetch('/api/dashboard')
       if (res.status === 401) { router.push('/login'); return }
       const json = await res.json()
-
       setData(json)
-      if (json.projects?.length > 0) {
-        setActiveProject(json.projects[0])
-      }
+      if (json.projects?.length > 0) setActiveProject(json.projects[0])
     } catch (e) {
       console.error('Dashboard load error', e)
     } finally {
       setLoading(false)
-    }
-  }
-
-  async function autoCreateProject(visaType?: string) {
-    setCreatingProject(true)
-    // Map visa_type to project template type
-    const typeMap: Record<string, string> = {
-      d7: 'd7_visa',
-      d7_visa: 'd7_visa',
-      digital_nomad: 'd7_visa', // fallback until D8 template exists
-      golden_visa: 'd7_visa',   // fallback
-    }
-    const type = typeMap[visaType || 'd7'] || 'd7_visa'
-    const nameMap: Record<string, string> = {
-      d7_visa: 'D7 Passive Income Visa',
-      digital_nomad: 'Digital Nomad Visa (D8)',
-      golden_visa: 'Golden Visa',
-    }
-    const name = nameMap[visaType || 'd7'] || 'Portugal Visa'
-
-    try {
-      await apiFetch('/api/projects', {
-        method: 'POST',
-        body: JSON.stringify({ type, name }),
-      })
-    } catch (e) {
-      console.error('Auto-create project error', e)
-    } finally {
-      setCreatingProject(false)
     }
   }
 
@@ -227,11 +194,11 @@ function DashboardInner() {
   const completedTasks = tasks.filter(t => t.status === 'completed')
   const criticalTasks = pendingTasks.filter(t => t.priority === 1)
 
-  if (loading || creatingProject) {
+  if (loading) {
     return (
       <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: OFF_WHITE, fontFamily: "'Helvetica Neue', sans-serif", color: MUTED }}>
         <div style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 13 }}>{creatingProject ? 'Setting up your project...' : 'Loading your dashboard...'}</div>
+          <div style={{ fontSize: 13 }}>Loading your dashboard...</div>
         </div>
       </div>
     )
