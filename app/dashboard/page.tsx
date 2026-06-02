@@ -140,16 +140,9 @@ function DashboardInner() {
       if (res.status === 401) { router.push('/login'); return }
       const json = await res.json()
 
-      // Auto-create project if user has none
-      if (json.projects?.length === 0) {
-        await autoCreateProject(json.profile?.visa_type)
-        const res2 = await apiFetch('/api/dashboard')
-        const json2 = await res2.json()
-        setData(json2)
-        if (json2.projects?.length > 0) setActiveProject(json2.projects[0])
-      } else {
-        setData(json)
-        if (json.projects?.length > 0) setActiveProject(json.projects[0])
+      setData(json)
+      if (json.projects?.length > 0) {
+        setActiveProject(json.projects[0])
       }
     } catch (e) {
       console.error('Dashboard load error', e)
