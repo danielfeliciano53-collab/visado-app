@@ -16,14 +16,13 @@ const DANGER = '#EF4444'
 
 interface VaultDoc {
   id: string
-  document_type: string
+  doc_type: string
   file_name: string | null
-  file_path: string | null
+  storage_path: string | null
   file_size: number | null
   mime_type: string | null
   status: 'empty' | 'uploaded' | 'sample'
   notes: string | null
-  uploaded_at: string | null
 }
 
 interface Profile {
@@ -139,7 +138,7 @@ export default function VaultPage() {
   }
 
   function getDocStatus(docType: string): VaultDoc | null {
-    return vaultDocs.find(d => d.document_type === docType) || null
+    return vaultDocs.find(d => d.doc_type === docType) || null
   }
 
   function handleUploadClick(docType: string) {
