@@ -102,7 +102,7 @@ export default function ChatPage() {
       })
       if (res.ok) {
         const data = await res.json()
-        setMessages(prev => [...prev, { role: 'assistant', content: data.message, time: now() }])
+        setMessages(prev => [...prev, { role: 'assistant', content: data.message?.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1') || '', time: now() }])
       } else {
         setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.', time: now() }])
       }
