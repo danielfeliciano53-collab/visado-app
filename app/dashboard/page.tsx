@@ -125,6 +125,45 @@ function TaskList({ tasks, onToggle, completed = false }: { tasks: Task[], onTog
   )
 }
 
+function getCurrentPhase(tasks: Task[]): string {
+  const PHASE_ORDER = ['Laying the Groundwork', 'The Final Push', "You've Landed", 'Becoming a Resident', 'Building Your Life']
+  for (const phase of PHASE_ORDER) {
+    const phaseTasks = tasks.filter(t => t.phase === phase)
+    if (phaseTasks.length > 0 && phaseTasks.some(t => t.status !== 'completed')) {
+      return phase
+    }
+  }
+  return PHASE_ORDER[PHASE_ORDER.length - 1]
+}
+
+function getPhaseNumber(phase: string): number {
+  const PHASE_ORDER = ['Laying the Groundwork', 'The Final Push', "You've Landed", 'Becoming a Resident', 'Building Your Life']
+  return PHASE_ORDER.indexOf(phase) + 1
+}
+
+function getPhaseEmoji(phase: string): string {
+  const map: Record<string, string> = {
+    'Laying the Groundwork': '🌱',
+    'The Final Push': '🚀',
+    "You've Landed": '✈️',
+    'Becoming a Resident': '🏛️',
+    'Building Your Life': '🏡',
+  }
+  return map[phase] || '📋'
+}
+
+function getChatUrl(phase: string, guideName: string): string {
+  const messages: Record<string, string> = {
+    'Laying the Groundwork': `I'm in the Laying the Groundwork phase of my D7 visa journey. What should I focus on first and what are the most important things to get right at this stage?`,
+    'The Final Push': `I'm in The Final Push phase — getting ready for my visa appointment. What do I need to make sure is in order before I go?`,
+    "You've Landed": `I've just arrived in Portugal and I'm in the You've Landed phase. What are the most critical things to do in my first week?`,
+    'Becoming a Resident': `I'm working on Becoming a Resident and need to tackle my AIMA appointment. What do I need to know and prepare?`,
+    'Building Your Life': `I'm in the Building Your Life phase — almost there! What should I prioritize to get fully settled in Portugal?`,
+  }
+  const msg = encodeURIComponent(messages[phase] || `Tell me about the ${phase} phase of my Portugal journey.`)
+  return `/chat?message=${msg}`
+}
+
 function DashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -242,6 +281,13 @@ function DashboardInner() {
   const pendingTasks = tasks.filter(t => t.status !== 'completed')
   const completedTasks = tasks.filter(t => t.status === 'completed')
   const criticalTasks = pendingTasks.filter(t => t.priority === 1)
+  const guideName = profile.guide_choice === 'andreia' ? 'Andreia' : 'Joao'
+  const currentPhase = tasks.length > 0 ? getCurrentPhase(tasks) : ''
+  const currentPhaseNumber = currentPhase ? getPhaseNumber(currentPhase) : 0
+  const currentPhaseEmoji = currentPhase ? getPhaseEmoji(currentPhase) : ''
+  const currentPhaseTasks = tasks.filter(t => t.phase === currentPhase)
+  const currentPhaseCompleted = currentPhaseTasks.filter(t => t.status === 'completed').length
+  const currentPhaseProgress = currentPhaseTasks.length > 0 ? Math.round((currentPhaseCompleted / currentPhaseTasks.length) * 100) : 0
 
   if (loading) {
     return (
@@ -301,9 +347,14 @@ function DashboardInner() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
                     <div>
                       <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Current Project</div>
-                      <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: DARK }}>{activeProject.name}</h2>
+                      <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700, color: DARK }}>{activeProject.name}</h2>
+                      {currentPhase && (
+                        <div style={{ fontSize: 13, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
+                          {currentPhaseEmoji} {currentPhase} (Phase {currentPhaseNumber})
+                        </div>
+                      )}
                     </div>
-                    <ProgressRing progress={activeProject.progress} size={72} />
+                    <ProgressRing progress={currentPhaseProgress} size={72} />
                   </div>
                   <div style={{ background: GREEN_LIGHT, borderRadius: 99, height: 6, marginBottom: 20 }}>
                     <div style={{ background: GREEN, borderRadius: 99, height: 6, width: `${activeProject.progress}%`, transition: 'width 0.6s ease' }} />
@@ -326,6 +377,12 @@ function DashboardInner() {
                           </div>
                         ))}
                       </div>
+                      {currentPhase && (
+                        <Link href={getChatUrl(currentPhase, guideName)}
+                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 12, padding: '8px 16px', background: GREEN_LIGHT, color: GREEN_DARK, borderRadius: 8, fontSize: 13, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none' }}>
+                          ◎ Chat with {guideName} about this phase
+                        </Link>
+                      )}
                       <Link href="/dashboard?tab=checklist" style={{ display: 'inline-block', marginTop: 12, fontSize: 13, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none' }}>
                         View full checklist →
                       </Link>
@@ -401,13 +458,21 @@ function DashboardInner() {
                           const isPhaseComplete = completedCount === group.tasks.length
                           return (
                             <div key={group.phase}>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                                   <span style={{ fontSize: 18 }}>{group.emoji}</span>
-                                  <span style={{ fontSize: 14, fontWeight: 700, color: isPhaseComplete ? GREEN_DARK : DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>{group.phase}</span>
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: isPhaseComplete ? GREEN_DARK : DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
+                                    {group.phase} (Phase {getPhaseNumber(group.phase)})
+                                  </span>
                                   {isPhaseComplete && <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Complete ✓</span>}
                                 </div>
-                                <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>{completedCount}/{group.tasks.length}</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>{completedCount}/{group.tasks.length}</span>
+                                  <Link href={getChatUrl(group.phase, guideName)}
+                                    style={{ fontSize: 12, padding: '5px 12px', background: GREEN_LIGHT, color: GREEN_DARK, borderRadius: 8, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                                    ◎ Chat about this phase
+                                  </Link>
+                                </div>
                               </div>
                               <TaskList tasks={group.tasks} onToggle={toggleTask} />
                             </div>
