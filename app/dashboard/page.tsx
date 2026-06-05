@@ -474,7 +474,7 @@ function DashboardInner() {
                                 {isPhaseComplete && <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Complete ✓</span>}
                                 <Link href={getChatUrl(group.phase, guideName)}
                                   style={{ fontSize: 12, padding: '4px 10px', background: GREEN_LIGHT, color: GREEN_DARK, borderRadius: 8, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                                  ◎ Chat
+                                  ◎ Chat with {guideName}
                                 </Link>
                                 <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginLeft: 'auto' }}>{completedCount}/{group.tasks.length}</span>
                               </div>
