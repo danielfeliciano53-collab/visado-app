@@ -25,6 +25,7 @@ interface Task {
   due_date: string | null
   order_index: number
   completed_at: string | null
+  phase?: string
 }
 
 interface Project {
@@ -374,37 +375,56 @@ function DashboardInner() {
               {taskLoading ? (
                 <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>Loading tasks...</div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-                  {criticalTasks.length > 0 && (
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                        <div style={{ width: 8, height: 8, borderRadius: '50%', background: DANGER }} />
-                        <span style={{ fontSize: 12, fontWeight: 700, color: DANGER, fontFamily: "'Helvetica Neue', sans-serif", textTransform: 'uppercase', letterSpacing: '0.05em' }}>Critical — Do These First</span>
-                      </div>
-                      <TaskList tasks={criticalTasks} onToggle={toggleTask} />
-                    </div>
-                  )}
-                  {pendingTasks.filter(t => t.priority !== 1).length > 0 && (
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
-                        Pending — {pendingTasks.filter(t => t.priority !== 1).length} tasks
-                      </div>
-                      <TaskList tasks={pendingTasks.filter(t => t.priority !== 1)} onToggle={toggleTask} />
-                    </div>
-                  )}
-                  {completedTasks.length > 0 && (
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 12 }}>
-                        Completed — {completedTasks.length} tasks ✓
-                      </div>
-                      <TaskList tasks={completedTasks} onToggle={toggleTask} completed />
-                    </div>
-                  )}
-                  {tasks.length === 0 && !taskLoading && (
-                    <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>
-                      No tasks yet. Your checklist will appear here.
-                    </div>
-                  )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                  {(() => {
+                    const PHASE_ORDER = ['Laying the Groundwork', 'The Final Push', "You've Landed", 'Becoming a Resident', 'Building Your Life']
+                    const PHASE_EMOJI: Record<string, string> = {
+                      'Laying the Groundwork': '🌱',
+                      'The Final Push': '🚀',
+                      "You've Landed": '✈️',
+                      'Becoming a Resident': '🏛️',
+                      'Building Your Life': '🏡',
+                    }
+                    const grouped = PHASE_ORDER.map(phase => ({
+                      phase,
+                      emoji: PHASE_EMOJI[phase] || '📋',
+                      tasks: tasks.filter(t => t.phase === phase).sort((a, b) => a.order_index - b.order_index),
+                    })).filter(g => g.tasks.length > 0)
+
+                    // If no phases assigned yet fall back to flat list
+                    const ungrouped = tasks.filter(t => !t.phase)
+
+                    return (
+                      <>
+                        {grouped.map(group => {
+                          const completedCount = group.tasks.filter(t => t.status === 'completed').length
+                          const isPhaseComplete = completedCount === group.tasks.length
+                          return (
+                            <div key={group.phase}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                  <span style={{ fontSize: 18 }}>{group.emoji}</span>
+                                  <span style={{ fontSize: 14, fontWeight: 700, color: isPhaseComplete ? GREEN_DARK : DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>{group.phase}</span>
+                                  {isPhaseComplete && <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Complete ✓</span>}
+                                </div>
+                                <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>{completedCount}/{group.tasks.length}</span>
+                              </div>
+                              <TaskList tasks={group.tasks} onToggle={toggleTask} />
+                            </div>
+                          )
+                        })}
+                        {ungrouped.length > 0 && (
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tasks</div>
+                            <TaskList tasks={ungrouped} onToggle={toggleTask} />
+                          </div>
+                        )}
+                        {tasks.length === 0 && (
+                          <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>No tasks yet.</div>
+                        )}
+                      </>
+                    )
+                  })()}
                 </div>
               )}
             </div>
