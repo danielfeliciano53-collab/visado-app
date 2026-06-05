@@ -60,7 +60,7 @@ function KPICard({ label, value, sub, color = DARK }: { label: string, value: st
 }
 
 function formatDate(dateStr: string) {
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 export default function AdminPage() {
@@ -68,7 +68,8 @@ export default function AdminPage() {
   const [data, setData] = useState<AdminData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [activeTab, setActiveTab] = useState<'overview' | 'users'>('overview')
+  const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'revenue'>('dashboard')
+  const [userFilter, setUserFilter] = useState<'all' | 'pro' | 'free' | 'cancelled'>('all')
 
   useEffect(() => { loadStats() }, [])
 
@@ -117,6 +118,20 @@ export default function AdminPage() {
 
   const { kpis, visaBreakdown, recentUsers, recentSignups } = data!
 
+  // User filtering
+  const filteredUsers = recentUsers.filter(u => {
+    if (userFilter === 'pro') return u.plan === 'pro'
+    if (userFilter === 'free') return u.plan !== 'pro' && u.plan !== 'cancelled'
+    if (userFilter === 'cancelled') return u.plan === 'cancelled'
+    return true
+  })
+
+  // Revenue estimates (based on pro users at $19.99/mo)
+  const MRR = kpis.proUsers * 19.99
+  const ARR = MRR * 12
+  const cancelledUsers = recentUsers.filter(u => u.plan === 'cancelled')
+  const churnRate = kpis.totalUsers > 0 ? Math.round((cancelledUsers.length / kpis.totalUsers) * 100) : 0
+
   return (
     <div style={{ minHeight: '100vh', background: OFF_WHITE, fontFamily: 'Georgia, serif' }}>
 
@@ -149,7 +164,7 @@ export default function AdminPage() {
 
         {/* Tabs */}
         <div style={{ display: 'flex', gap: 4, borderBottom: `1px solid ${BORDER}`, marginBottom: 28 }}>
-          {(['overview', 'users'] as const).map(tab => (
+          {(['dashboard', 'users', 'revenue'] as const).map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
               style={{ padding: '8px 16px', fontSize: 14, fontWeight: activeTab === tab ? 600 : 400, color: activeTab === tab ? GREEN_DARK : MUTED, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif", borderBottom: activeTab === tab ? `2px solid ${GREEN_DARK}` : '2px solid transparent', marginBottom: -1 }}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -157,8 +172,8 @@ export default function AdminPage() {
           ))}
         </div>
 
-        {/* ── OVERVIEW TAB ── */}
-        {activeTab === 'overview' && (
+        {/* ── DASHBOARD TAB ── */}
+        {activeTab === 'dashboard' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
             {/* KPI cards */}
@@ -177,7 +192,7 @@ export default function AdminPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {Object.entries(visaBreakdown).sort((a, b) => b[1] - a[1]).map(([type, count]) => (
                   <div key={type} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{ width: 140, fontSize: 13, color: DARK, fontFamily: "'Helvetica Neue', sans-serif", flexShrink: 0 }}>
+                    <div style={{ width: 160, fontSize: 13, color: DARK, fontFamily: "'Helvetica Neue', sans-serif", flexShrink: 0 }}>
                       {VISA_LABELS[type] || type}
                     </div>
                     <div style={{ flex: 1, background: OFF_WHITE, borderRadius: 99, height: 8 }}>
@@ -189,12 +204,44 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* Recent signups */}
-            {recentSignups.length > 0 && (
-              <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24 }}>
-                <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 600, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
-                  New Signups This Week ({recentSignups.length})
+            {/* Churned users */}
+            <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
+                  Churned Users ({cancelledUsers.length})
                 </h3>
+                <span style={{ fontSize: 12, color: cancelledUsers.length > 0 ? DANGER : MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>
+                  {churnRate}% churn rate
+                </span>
+              </div>
+              {cancelledUsers.length === 0 ? (
+                <div style={{ fontSize: 13, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>No churned users yet. 🎉</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {cancelledUsers.map(user => (
+                    <div key={user.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: '#FEF2F2', borderRadius: 8, border: '1px solid #FCA5A5' }}>
+                      <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#FCA5A5', color: DANGER, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                        {(user.full_name?.[0] || user.email[0]).toUpperCase()}
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>{user.full_name || 'No name'}</div>
+                        <div style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>{user.email}</div>
+                      </div>
+                      <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>{formatDate(user.created_at)}</div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Recent signups */}
+            <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24 }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 600, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
+                New Signups This Week ({recentSignups.length})
+              </h3>
+              {recentSignups.length === 0 ? (
+                <div style={{ fontSize: 13, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>No new signups this week yet. Time to launch! 🚀</div>
+              ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {recentSignups.map(user => (
                     <div key={user.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: GREEN_LIGHT, borderRadius: 8 }}>
@@ -205,7 +252,7 @@ export default function AdminPage() {
                         <div style={{ fontSize: 13, fontWeight: 600, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>{user.full_name || 'No name'}</div>
                         <div style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>{user.email} · {VISA_LABELS[user.visa_type || ''] || 'No visa selected'}</div>
                       </div>
-                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, background: user.plan === 'pro' ? GREEN_LIGHT : '#F3F4F6', color: user.plan === 'pro' ? GREEN_DARK : MUTED, border: `1px solid ${user.plan === 'pro' ? GREEN : BORDER}` }}>
+                      <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, background: user.plan === 'pro' ? GREEN_LIGHT : '#F3F4F6', color: user.plan === 'pro' ? GREEN_DARK : MUTED, border: `1px solid ${user.plan === 'pro' ? GREEN : BORDER}`, flexShrink: 0 }}>
                         {user.plan === 'pro' ? 'Pro' : 'Free'}
                       </span>
                       <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", flexShrink: 0 }}>
@@ -214,24 +261,29 @@ export default function AdminPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
-
-            {recentSignups.length === 0 && (
-              <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 32, textAlign: 'center', color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 14 }}>
-                No new signups this week yet. Time to launch! 🚀
-              </div>
-            )}
+              )}
+            </div>
           </div>
         )}
 
         {/* ── USERS TAB ── */}
         {activeTab === 'users' && (
           <div>
+            {/* Filter buttons */}
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+              {(['all', 'pro', 'free', 'cancelled'] as const).map(f => (
+                <button key={f} onClick={() => setUserFilter(f)}
+                  style={{ padding: '7px 16px', borderRadius: 20, border: `1px solid ${userFilter === f ? GREEN_DARK : BORDER}`, background: userFilter === f ? GREEN_LIGHT : '#fff', color: userFilter === f ? GREEN_DARK : MUTED, fontSize: 13, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: userFilter === f ? 600 : 400, cursor: 'pointer' }}>
+                  {f.charAt(0).toUpperCase() + f.slice(1)}
+                  {f === 'all' && ` (${recentUsers.length})`}
+                  {f === 'pro' && ` (${recentUsers.filter(u => u.plan === 'pro').length})`}
+                  {f === 'free' && ` (${recentUsers.filter(u => u.plan !== 'pro' && u.plan !== 'cancelled').length})`}
+                  {f === 'cancelled' && ` (${recentUsers.filter(u => u.plan === 'cancelled').length})`}
+                </button>
+              ))}
+            </div>
+
             <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, overflow: 'hidden' }}>
-              <div style={{ padding: '16px 20px', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>All Users ({recentUsers.length})</h3>
-              </div>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontFamily: "'Helvetica Neue', sans-serif" }}>
                   <thead>
@@ -242,13 +294,15 @@ export default function AdminPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {recentUsers.map((user, i) => (
+                    {filteredUsers.length === 0 ? (
+                      <tr><td colSpan={7} style={{ padding: '24px 16px', textAlign: 'center', color: MUTED }}>No users in this category.</td></tr>
+                    ) : filteredUsers.map((user, i) => (
                       <tr key={user.id} style={{ borderBottom: `1px solid ${BORDER}`, background: i % 2 === 0 ? '#fff' : OFF_WHITE }}>
                         <td style={{ padding: '10px 16px', color: DARK, fontWeight: 500 }}>{user.full_name || '—'}</td>
                         <td style={{ padding: '10px 16px', color: MUTED }}>{user.email}</td>
                         <td style={{ padding: '10px 16px' }}>
-                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, fontWeight: 600, background: user.plan === 'pro' ? GREEN_LIGHT : '#F3F4F6', color: user.plan === 'pro' ? GREEN_DARK : MUTED }}>
-                            {user.plan === 'pro' ? 'Pro' : 'Free'}
+                          <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, fontWeight: 600, background: user.plan === 'pro' ? GREEN_LIGHT : user.plan === 'cancelled' ? '#FEF2F2' : '#F3F4F6', color: user.plan === 'pro' ? GREEN_DARK : user.plan === 'cancelled' ? DANGER : MUTED }}>
+                            {user.plan === 'pro' ? 'Pro' : user.plan === 'cancelled' ? 'Cancelled' : 'Free'}
                           </span>
                         </td>
                         <td style={{ padding: '10px 16px', color: MUTED }}>{VISA_LABELS[user.visa_type || ''] || '—'}</td>
@@ -259,12 +313,50 @@ export default function AdminPage() {
                           </span>
                         </td>
                         <td style={{ padding: '10px 16px', color: MUTED, whiteSpace: 'nowrap' }}>
-                          {new Date(user.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          {formatDate(user.created_at)}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── REVENUE TAB ── */}
+        {activeTab === 'revenue' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+              <KPICard label="MRR" value={`$${MRR.toFixed(2)}`} sub="monthly recurring revenue" color={GREEN_DARK} />
+              <KPICard label="ARR" value={`$${ARR.toFixed(2)}`} sub="annualized run rate" color={GREEN_DARK} />
+              <KPICard label="Paying Users" value={kpis.proUsers} sub={`at $19.99/mo`} color={GREEN_DARK} />
+            </div>
+
+            <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24 }}>
+              <h3 style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 600, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>Revenue Note</h3>
+              <p style={{ margin: 0, fontSize: 13, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", lineHeight: 1.6 }}>
+                Revenue figures are estimated based on Pro user count at $19.99/month. For real-time revenue data, transaction history, and payout details, visit your{' '}
+                <a href="https://dashboard.stripe.com" target="_blank" rel="noopener noreferrer" style={{ color: GREEN_DARK, fontWeight: 600 }}>Stripe Dashboard</a>.
+                {' '}Once Stripe webhook data is fully integrated, actual payment amounts will appear here automatically.
+              </p>
+            </div>
+
+            <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24 }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 600, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>Subscription Summary</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  { label: 'Active Pro subscriptions', value: kpis.proUsers, color: GREEN_DARK },
+                  { label: 'Free users (upgrade potential)', value: kpis.freeUsers, color: MUTED },
+                  { label: 'Cancelled subscriptions', value: cancelledUsers.length, color: cancelledUsers.length > 0 ? DANGER : MUTED },
+                  { label: 'Conversion rate (free → pro)', value: `${Math.round((kpis.proUsers / Math.max(kpis.totalUsers, 1)) * 100)}%`, color: GREEN_DARK },
+                  { label: 'Churn rate', value: `${churnRate}%`, color: churnRate > 10 ? DANGER : churnRate > 5 ? WARN : GREEN_DARK },
+                ].map((row, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderBottom: i < 4 ? `1px solid ${BORDER}` : 'none' }}>
+                    <span style={{ fontSize: 13, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>{row.label}</span>
+                    <span style={{ fontSize: 15, fontWeight: 700, color: row.color, fontFamily: "'Helvetica Neue', sans-serif" }}>{row.value}</span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
