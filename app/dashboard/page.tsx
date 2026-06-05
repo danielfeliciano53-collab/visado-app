@@ -307,7 +307,7 @@ function DashboardInner() {
           {(['overview', 'checklist'] as const).map(tab => (
             <button key={tab} onClick={() => { setActiveTab(tab); router.replace(tab === 'checklist' ? '/dashboard?tab=checklist' : '/dashboard', { scroll: false }) }}
               style={{ padding: '8px 16px', fontSize: 14, fontWeight: activeTab === tab ? 600 : 400, color: activeTab === tab ? GREEN_DARK : MUTED, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif", borderBottom: activeTab === tab ? `2px solid ${GREEN_DARK}` : '2px solid transparent', marginBottom: -1 }}>
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              {tab === 'overview' ? 'Dashboard' : 'Checklist'}
             </button>
           ))}
         </div>

@@ -21,7 +21,7 @@ interface SidebarProps {
 }
 
 const NAV = [
-  { label: 'Overview', href: '/dashboard', icon: '⊞' },
+  { label: 'Dashboard', href: '/dashboard', icon: '⊞' },
   { label: 'Checklist', href: '/dashboard?tab=checklist', icon: '✓' },
   { label: 'Chat', href: '/chat', icon: '◎' },
   { label: 'Document Vault', href: '/vault', icon: '⊠' },
