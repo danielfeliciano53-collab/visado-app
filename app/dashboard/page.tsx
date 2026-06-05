@@ -136,7 +136,8 @@ function TaskList({ tasks, onToggle, completed = false }: { tasks: Task[], onTog
 function DashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const activeTab = searchParams.get('tab') || 'overview'
+  const rawTab = searchParams.get('tab')
+  const activeTab = rawTab === 'checklist' ? 'checklist' : 'overview'
 
   const [data, setData] = useState<DashboardData | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
