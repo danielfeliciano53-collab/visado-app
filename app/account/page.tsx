@@ -14,7 +14,7 @@ const MUTED = '#6B7280'
 const BORDER = '#E5E7EB'
 const DANGER = '#EF4444'
 
-const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/your-link-here'
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/4gM4gA2t94561v1cVMabK00'
 
 const VISA_OPTIONS = [
   { value: 'd7', label: 'D7 Passive Income Visa' },

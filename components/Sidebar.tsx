@@ -57,7 +57,7 @@ export default function Sidebar({ activePage, profile, onLogout }: SidebarProps)
           </div>
         </Link>
         {profile?.plan !== 'pro' && (
-          <Link href="https://buy.stripe.com/your-link-here" style={{ display: 'block', textAlign: 'center', padding: '9px', background: GREEN_DARK, color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 8 }}>
+          <Link href="https://buy.stripe.com/4gM4gA2t94561v1cVMabK00" style={{ display: 'block', textAlign: 'center', padding: '9px', background: GREEN_DARK, color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 8 }}>
             Upgrade to Pro
           </Link>
         )}
