@@ -70,6 +70,10 @@ export default function AdminPage() {
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'revenue'>('dashboard')
   const [userFilter, setUserFilter] = useState<'all' | 'pro' | 'free' | 'cancelled'>('all')
+  const [pinVerified, setPinVerified] = useState(false)
+  const [pinInput, setPinInput] = useState('')
+  const [pinError, setPinError] = useState(false)
+  const ADMIN_PIN = '1975'
 
   useEffect(() => { loadStats() }, [])
 
@@ -110,6 +114,38 @@ export default function AdminPage() {
           <div style={{ fontSize: 16, color: DANGER, marginBottom: 16 }}>{error}</div>
           <button onClick={() => router.push('/dashboard')} style={{ padding: '10px 20px', background: GREEN_DARK, color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif" }}>
             Back to Dashboard
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (!pinVerified) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: OFF_WHITE, fontFamily: "'Helvetica Neue', sans-serif" }}>
+        <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 40, width: 320, textAlign: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 24 }}>
+            <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: GREEN }} />
+            <span style={{ fontSize: 18, fontWeight: 700, color: GREEN_DARK }}>Visado Admin</span>
+          </div>
+          <p style={{ fontSize: 14, color: MUTED, marginBottom: 20 }}>Enter admin PIN to continue</p>
+          <input
+            type="password"
+            value={pinInput}
+            onChange={e => setPinInput(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') {
+                if (pinInput === ADMIN_PIN) { setPinVerified(true) } else { setPinError(true); setPinInput('') }
+              }
+            }}
+            placeholder="••••"
+            style={{ width: '100%', padding: '11px 12px', border: `1.5px solid ${pinError ? DANGER : BORDER}`, borderRadius: 10, fontSize: 18, textAlign: 'center', letterSpacing: 8, fontFamily: "'Helvetica Neue', sans-serif", outline: 'none', boxSizing: 'border-box', marginBottom: 12 }}
+          />
+          {pinError && <div style={{ fontSize: 12, color: DANGER, marginBottom: 12, fontFamily: "'Helvetica Neue', sans-serif" }}>Incorrect PIN. Try again.</div>}
+          <button
+            onClick={() => { if (pinInput === ADMIN_PIN) { setPinVerified(true) } else { setPinError(true); setPinInput('') } }}
+            style={{ width: '100%', padding: '11px', background: GREEN_DARK, color: '#fff', border: 'none', borderRadius: 10, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif" }}>
+            Enter
           </button>
         </div>
       </div>
