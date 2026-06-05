@@ -203,7 +203,7 @@ function DashboardInner() {
 
       if (!json.projects || json.projects.length === 0) {
         const visaType = json.profile?.visa_type || 'd7'
-        const typeMap: Record<string, string> = { d7: 'd7_visa', d7_visa: 'd7_visa', digital_nomad: 'd7_visa', golden_visa: 'd7_visa' }
+        const typeMap: Record<string, string> = { d7: 'd7_visa', d7_visa: 'd7_visa', digital_nomad: 'digital_nomad', golden_visa: 'd7_visa' }
         const nameMap: Record<string, string> = { d7_visa: 'D7 Passive Income Visa', digital_nomad: 'Digital Nomad Visa (D8)', golden_visa: 'Golden Visa' }
         const type = typeMap[visaType] || 'd7_visa'
         const name = nameMap[visaType] || 'Portugal Visa Journey'
