@@ -184,6 +184,7 @@ export default function AdminPage() {
               <KPICard label="New This Week" value={kpis.newUsersThisWeek} sub="last 7 days" color={kpis.newUsersThisWeek > 0 ? GREEN_DARK : DARK} />
               <KPICard label="Onboarded" value={kpis.onboardedUsers} sub={`${Math.round((kpis.onboardedUsers / Math.max(kpis.totalUsers, 1)) * 100)}% completed onboarding`} />
               <KPICard label="Active Chatters" value={kpis.activeChatterIds} sub="sent a message this week" color={kpis.activeChatterIds > 0 ? GREEN_DARK : DARK} />
+              <KPICard label="Est. MRR" value={`$${MRR.toFixed(0)}`} sub="based on active Pro users" color={GREEN_DARK} />
             </div>
 
             {/* Visa breakdown */}
