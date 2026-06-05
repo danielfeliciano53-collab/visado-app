@@ -325,10 +325,12 @@ function DashboardInner() {
 
         <div style={{ padding: isMobile ? '20px 16px 0' : '24px 32px 0', display: 'flex', gap: 4, borderBottom: `1px solid ${BORDER}`, marginTop: 8 }}>
           {['overview', 'checklist'].map(tab => (
-            <Link key={tab} href={`/dashboard${tab === 'checklist' ? '?tab=checklist' : ''}`}
-              style={{ padding: '8px 16px', fontSize: 14, fontWeight: activeTab === tab ? 600 : 400, color: activeTab === tab ? GREEN_DARK : MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", borderBottom: activeTab === tab ? `2px solid ${GREEN_DARK}` : '2px solid transparent', marginBottom: -1 }}>
+            <button
+              key={tab}
+              onClick={() => router.push(tab === 'checklist' ? '/dashboard?tab=checklist' : '/dashboard')}
+              style={{ padding: '8px 16px', fontSize: 14, fontWeight: activeTab === tab ? 600 : 400, color: activeTab === tab ? GREEN_DARK : MUTED, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif", borderBottom: activeTab === tab ? `2px solid ${GREEN_DARK}` : '2px solid transparent', marginBottom: -1 }}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </Link>
+            </button>
           ))}
         </div>
 
