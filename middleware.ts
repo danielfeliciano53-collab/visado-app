@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PROTECTED = ['/dashboard', '/chat', '/vault', '/account', '/contact']
+const PROTECTED = ['/dashboard', '/chat', '/vault', '/account', '/contact', '/admin']
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('visado_token')?.value
