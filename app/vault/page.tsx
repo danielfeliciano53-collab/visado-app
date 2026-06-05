@@ -189,6 +189,21 @@ export default function VaultPage() {
     }
   }
 
+  async function handleDownload(docId: string, fileName: string) {
+    try {
+      const res = await apiFetch(`/api/vault/download?id=${docId}`)
+      if (res.ok) {
+        const data = await res.json()
+        window.open(data.url, '_blank')
+      } else {
+        alert('Download failed. Please try again.')
+      }
+    } catch (e) {
+      console.error('Download error', e)
+      alert('Download failed. Please try again.')
+    }
+  }
+
   function handleLogout() {
     deleteCookie('visado_token')
     deleteCookie('visado_user')
@@ -319,15 +334,22 @@ export default function VaultPage() {
                             <p style={{ fontSize: 13, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", lineHeight: 1.6, margin: '12px 0' }}>
                               {doc.description}
                             </p>
-                            {isUploaded && (
-                              <div style={{ display: 'flex', gap: 8 }}>
+                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                              {isUploaded && (
+                                <button
+                                  onClick={() => handleDownload(existing!.id, existing!.file_name || 'document')}
+                                  style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid ${GREEN_DARK}`, background: GREEN_LIGHT, color: GREEN_DARK, fontSize: 12, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: 'pointer' }}>
+                                  ⬇ Download / View
+                                </button>
+                              )}
+                              {isUploaded && (
                                 <button
                                   onClick={() => handleDelete(existing!.id)}
                                   style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid #FCA5A5`, background: '#FEF2F2', color: DANGER, fontSize: 12, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: 'pointer' }}>
                                   Delete
                                 </button>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
