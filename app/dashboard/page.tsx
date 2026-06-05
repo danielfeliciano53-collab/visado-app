@@ -16,6 +16,39 @@ const BORDER = '#E5E7EB'
 const WARN = '#F59E0B'
 const DANGER = '#EF4444'
 
+const PHASE_ORDER = ['Laying the Groundwork', 'The Final Push', "You've Landed", 'Becoming a Resident', 'Building Your Life']
+const PHASE_EMOJI: Record<string, string> = {
+  'Laying the Groundwork': '🌱',
+  'The Final Push': '🚀',
+  "You've Landed": '✈️',
+  'Becoming a Resident': '🏛️',
+  'Building Your Life': '🏡',
+}
+
+function getPhaseNumber(phase: string): number {
+  return PHASE_ORDER.indexOf(phase) + 1
+}
+
+function getCurrentPhase(tasks: Task[]): string {
+  for (const phase of PHASE_ORDER) {
+    const phaseTasks = tasks.filter(t => t.phase === phase)
+    if (phaseTasks.length > 0 && phaseTasks.some(t => t.status !== 'completed')) return phase
+  }
+  return PHASE_ORDER[PHASE_ORDER.length - 1]
+}
+
+function getChatUrl(phase: string, guideName: string): string {
+  const messages: Record<string, string> = {
+    'Laying the Groundwork': `I'm in the Laying the Groundwork phase of my D7 visa journey. What should I focus on first and what are the most important things to get right at this stage?`,
+    'The Final Push': `I'm in The Final Push phase — getting ready for my visa appointment. What do I need to make sure is in order before I go?`,
+    "You've Landed": `I've just arrived in Portugal and I'm in the You've Landed phase. What are the most critical things to do in my first week?`,
+    'Becoming a Resident': `I'm working on Becoming a Resident and need to tackle my AIMA appointment. What do I need to know and prepare?`,
+    'Building Your Life': `I'm in the Building Your Life phase — almost there! What should I prioritize to get fully settled in Portugal?`,
+  }
+  const msg = encodeURIComponent(messages[phase] || `Tell me about the ${phase} phase of my Portugal journey.`)
+  return `/chat?message=${msg}`
+}
+
 interface Task {
   id: string
   title: string
@@ -78,13 +111,9 @@ function ProgressRing({ progress, size = 80 }: { progress: number; size?: number
         strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
         style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
       <text
-        x={size / 2}
-        y={size / 2}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fill={GREEN_DARK}
-        fontSize={14}
-        fontWeight={700}
+        x={size / 2} y={size / 2}
+        textAnchor="middle" dominantBaseline="middle"
+        fill={GREEN_DARK} fontSize={14} fontWeight={700}
         fontFamily="Helvetica Neue, sans-serif"
         style={{ transform: 'rotate(90deg)', transformOrigin: `${size / 2}px ${size / 2}px` }}
       >
@@ -94,12 +123,12 @@ function ProgressRing({ progress, size = 80 }: { progress: number; size?: number
   )
 }
 
-function TaskList({ tasks, onToggle, completed = false }: { tasks: Task[], onToggle: (t: Task) => void, completed?: boolean }) {
+function TaskList({ tasks, onToggle }: { tasks: Task[], onToggle: (t: Task) => void }) {
   const [expanded, setExpanded] = useState<string | null>(null)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {tasks.map(task => (
-        <div key={task.id} style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden', opacity: completed ? 0.6 : 1 }}>
+        <div key={task.id} style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden', opacity: task.status === 'completed' ? 0.6 : 1 }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', cursor: 'pointer' }}
             onClick={() => setExpanded(expanded === task.id ? null : task.id)}>
             <div onClick={e => { e.stopPropagation(); onToggle(task) }}
@@ -136,8 +165,11 @@ function TaskList({ tasks, onToggle, completed = false }: { tasks: Task[], onTog
 function DashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const rawTab = searchParams.get('tab')
-  const activeTab = rawTab === 'checklist' ? 'checklist' : 'overview'
+
+  // Tab is local state — initialized from URL but controlled by clicks
+  const [activeTab, setActiveTab] = useState<'overview' | 'checklist'>(
+    searchParams.get('tab') === 'checklist' ? 'checklist' : 'overview'
+  )
 
   const [data, setData] = useState<DashboardData | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
@@ -166,35 +198,19 @@ function DashboardInner() {
       if (res.status === 401) { router.push('/login'); return }
       const json = await res.json()
 
-      // If no projects, auto-create one from template based on visa type
       if (!json.projects || json.projects.length === 0) {
         const visaType = json.profile?.visa_type || 'd7'
-        const typeMap: Record<string, string> = {
-          d7: 'd7_visa', d7_visa: 'd7_visa',
-          digital_nomad: 'd7_visa', golden_visa: 'd7_visa',
-        }
-        const nameMap: Record<string, string> = {
-          d7_visa: 'D7 Passive Income Visa',
-          digital_nomad: 'Digital Nomad Visa (D8)',
-          golden_visa: 'Golden Visa',
-        }
+        const typeMap: Record<string, string> = { d7: 'd7_visa', d7_visa: 'd7_visa', digital_nomad: 'd7_visa', golden_visa: 'd7_visa' }
+        const nameMap: Record<string, string> = { d7_visa: 'D7 Passive Income Visa', digital_nomad: 'Digital Nomad Visa (D8)', golden_visa: 'Golden Visa' }
         const type = typeMap[visaType] || 'd7_visa'
         const name = nameMap[visaType] || 'Portugal Visa Journey'
-
-        const createRes = await apiFetch('/api/projects', {
-          method: 'POST',
-          body: JSON.stringify({ type, name }),
-        })
-
+        const createRes = await apiFetch('/api/projects', { method: 'POST', body: JSON.stringify({ type, name }) })
         if (createRes.ok) {
-          // Reload dashboard after project creation
           const res2 = await apiFetch('/api/dashboard')
           const json2 = await res2.json()
           setData(json2)
           if (json2.projects?.length > 0) setActiveProject(json2.projects[0])
         } else {
-          const errText = await createRes.text()
-          console.error('[dashboard] auto-create failed:', createRes.status, errText)
           setData(json)
         }
       } else {
@@ -231,10 +247,7 @@ function DashboardInner() {
       setActiveProject(prev => prev ? { ...prev, progress, completed_tasks: completedCount } : prev)
     }
     try {
-      await apiFetch('/api/tasks', {
-        method: 'PATCH',
-        body: JSON.stringify({ id: task.id, status: newStatus }),
-      })
+      await apiFetch('/api/tasks', { method: 'PATCH', body: JSON.stringify({ id: task.id, status: newStatus }) })
     } catch (e) {
       setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: task.status } : t))
     }
@@ -249,8 +262,16 @@ function DashboardInner() {
   const profile = data?.profile || {}
   const summary = data?.summary || { total_tasks: 0, completed_tasks: 0, overall_progress: 0, active_projects: 0 }
   const pendingTasks = tasks.filter(t => t.status !== 'completed')
-  const completedTasks = tasks.filter(t => t.status === 'completed')
   const criticalTasks = pendingTasks.filter(t => t.priority === 1)
+  const guideName = profile.guide_choice === 'andreia' ? 'Andreia' : 'Joao'
+
+  // Phase-aware computed values
+  const currentPhase = tasks.length > 0 ? getCurrentPhase(tasks) : ''
+  const currentPhaseNumber = currentPhase ? getPhaseNumber(currentPhase) : 0
+  const currentPhaseEmoji = currentPhase ? (PHASE_EMOJI[currentPhase] || '📋') : ''
+  const currentPhaseTasks = tasks.filter(t => t.phase === currentPhase)
+  const currentPhaseCompleted = currentPhaseTasks.filter(t => t.status === 'completed').length
+  const currentPhaseProgress = currentPhaseTasks.length > 0 ? Math.round((currentPhaseCompleted / currentPhaseTasks.length) * 100) : 0
 
   if (loading) {
     return (
@@ -278,16 +299,19 @@ function DashboardInner() {
           </p>
         </div>
 
+        {/* Tabs — local state, no URL navigation */}
         <div style={{ padding: isMobile ? '20px 16px 0' : '24px 32px 0', display: 'flex', gap: 4, borderBottom: `1px solid ${BORDER}`, marginTop: 8 }}>
-          {['overview', 'checklist'].map(tab => (
-            <Link key={tab} href={`/dashboard${tab === 'checklist' ? '?tab=checklist' : ''}`}
-              style={{ padding: '8px 16px', fontSize: 14, fontWeight: activeTab === tab ? 600 : 400, color: activeTab === tab ? GREEN_DARK : MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", borderBottom: activeTab === tab ? `2px solid ${GREEN_DARK}` : '2px solid transparent', marginBottom: -1 }}>
+          {(['overview', 'checklist'] as const).map(tab => (
+            <button key={tab} onClick={() => setActiveTab(tab)}
+              style={{ padding: '8px 16px', fontSize: 14, fontWeight: activeTab === tab ? 600 : 400, color: activeTab === tab ? GREEN_DARK : MUTED, background: 'none', border: 'none', cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif", borderBottom: activeTab === tab ? `2px solid ${GREEN_DARK}` : '2px solid transparent', marginBottom: -1 }}>
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </Link>
+            </button>
           ))}
         </div>
 
         <div style={{ padding: isMobile ? '24px 16px' : '32px' }}>
+
+          {/* ── OVERVIEW TAB ── */}
           {activeTab === 'overview' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 12 }}>
@@ -307,13 +331,25 @@ function DashboardInner() {
 
               {activeProject && (
                 <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 12, padding: 24 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
                     <div>
                       <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Current Project</div>
-                      <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: DARK }}>{activeProject.name}</h2>
+                      <h2 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: DARK }}>{activeProject.name}</h2>
+                      {currentPhase && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 13, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
+                            {currentPhaseEmoji} {currentPhase} (Phase {currentPhaseNumber})
+                          </span>
+                          <Link href={getChatUrl(currentPhase, guideName)}
+                            style={{ fontSize: 12, padding: '3px 10px', background: GREEN_LIGHT, color: GREEN_DARK, borderRadius: 8, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                            ◎ Chat with {guideName} about this phase
+                          </Link>
+                        </div>
+                      )}
                     </div>
-                    <ProgressRing progress={activeProject.progress} size={72} />
+                    <ProgressRing progress={currentPhaseProgress} size={72} />
                   </div>
+
                   <div style={{ background: GREEN_LIGHT, borderRadius: 99, height: 6, marginBottom: 20 }}>
                     <div style={{ background: GREEN, borderRadius: 99, height: 6, width: `${activeProject.progress}%`, transition: 'width 0.6s ease' }} />
                   </div>
@@ -324,6 +360,7 @@ function DashboardInner() {
                     {activeProject.progress >= 50 && activeProject.progress < 100 && ' — more than halfway there!'}
                     {activeProject.progress === 100 && ' — project complete! 🎉'}
                   </div>
+
                   {activeProject.next_tasks?.length > 0 && (
                     <div style={{ marginTop: 20 }}>
                       <div style={{ fontSize: 12, fontWeight: 600, color: DARK, fontFamily: "'Helvetica Neue', sans-serif", textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>Next Up</div>
@@ -335,11 +372,13 @@ function DashboardInner() {
                           </div>
                         ))}
                       </div>
-                      <Link href="/dashboard?tab=checklist" style={{ display: 'inline-block', marginTop: 12, fontSize: 13, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none' }}>
+                      <button onClick={() => setActiveTab('checklist')}
+                        style={{ background: 'none', border: 'none', padding: 0, marginTop: 12, fontSize: 13, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: 'pointer', textDecoration: 'none' }}>
                         View full checklist →
-                      </Link>
+                      </button>
                     </div>
                   )}
+
                   {activeProject.overdue_tasks?.length > 0 && (
                     <div style={{ marginTop: 16, padding: '12px 14px', background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 8 }}>
                       <div style={{ fontSize: 13, color: '#92400E', fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
@@ -354,7 +393,7 @@ function DashboardInner() {
                 <Link href="/chat" style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '16px 20px', background: GREEN_DARK, borderRadius: 12, textDecoration: 'none' }}>
                   <span style={{ fontSize: 22 }}>◎</span>
                   <div>
-                    <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', fontFamily: "'Helvetica Neue', sans-serif" }}>Chat with {profile.guide_choice === 'andreia' ? 'Andreia' : 'Joao'}</div>
+                    <div style={{ fontSize: 14, fontWeight: 600, color: '#fff', fontFamily: "'Helvetica Neue', sans-serif" }}>Chat with {guideName}</div>
                     <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: "'Helvetica Neue', sans-serif", marginTop: 2 }}>Get guidance on your next step</div>
                   </div>
                 </Link>
@@ -369,6 +408,7 @@ function DashboardInner() {
             </div>
           )}
 
+          {/* ── CHECKLIST TAB ── */}
           {activeTab === 'checklist' && (
             <div>
               {data?.projects && data.projects.length > 1 && (
@@ -385,55 +425,42 @@ function DashboardInner() {
                 <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>Loading tasks...</div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-                  {(() => {
-                    const PHASE_ORDER = ['Laying the Groundwork', 'The Final Push', "You've Landed", 'Becoming a Resident', 'Building Your Life']
-                    const PHASE_EMOJI: Record<string, string> = {
-                      'Laying the Groundwork': '🌱',
-                      'The Final Push': '🚀',
-                      "You've Landed": '✈️',
-                      'Becoming a Resident': '🏛️',
-                      'Building Your Life': '🏡',
-                    }
-                    const grouped = PHASE_ORDER.map(phase => ({
-                      phase,
-                      emoji: PHASE_EMOJI[phase] || '📋',
-                      tasks: tasks.filter(t => t.phase === phase).sort((a, b) => a.order_index - b.order_index),
-                    })).filter(g => g.tasks.length > 0)
-
-                    // If no phases assigned yet fall back to flat list
-                    const ungrouped = tasks.filter(t => !t.phase)
-
+                  {PHASE_ORDER.map(phase => {
+                    const phaseTasks = tasks.filter(t => t.phase === phase).sort((a, b) => a.order_index - b.order_index)
+                    if (phaseTasks.length === 0) return null
+                    const completedCount = phaseTasks.filter(t => t.status === 'completed').length
+                    const isPhaseComplete = completedCount === phaseTasks.length
+                    const phaseEmoji = PHASE_EMOJI[phase] || '📋'
+                    const phaseNum = getPhaseNumber(phase)
                     return (
-                      <>
-                        {grouped.map(group => {
-                          const completedCount = group.tasks.filter(t => t.status === 'completed').length
-                          const isPhaseComplete = completedCount === group.tasks.length
-                          return (
-                            <div key={group.phase}>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <span style={{ fontSize: 18 }}>{group.emoji}</span>
-                                  <span style={{ fontSize: 14, fontWeight: 700, color: isPhaseComplete ? GREEN_DARK : DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>{group.phase}</span>
-                                  {isPhaseComplete && <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Complete ✓</span>}
-                                </div>
-                                <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>{completedCount}/{group.tasks.length}</span>
-                              </div>
-                              <TaskList tasks={group.tasks} onToggle={toggleTask} />
-                            </div>
-                          )
-                        })}
-                        {ungrouped.length > 0 && (
-                          <div>
-                            <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Tasks</div>
-                            <TaskList tasks={ungrouped} onToggle={toggleTask} />
-                          </div>
-                        )}
-                        {tasks.length === 0 && (
-                          <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>No tasks yet.</div>
-                        )}
-                      </>
+                      <div key={phase}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: 18 }}>{phaseEmoji}</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: isPhaseComplete ? GREEN_DARK : DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
+                            {phase} (Phase {phaseNum})
+                          </span>
+                          {isPhaseComplete && (
+                            <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Complete ✓</span>
+                          )}
+                          <Link href={getChatUrl(phase, guideName)}
+                            style={{ fontSize: 12, padding: '3px 10px', background: GREEN_LIGHT, color: GREEN_DARK, borderRadius: 8, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                            ◎ Chat with {guideName}
+                          </Link>
+                          <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginLeft: 'auto' }}>{completedCount}/{phaseTasks.length}</span>
+                        </div>
+                        <TaskList tasks={phaseTasks} onToggle={toggleTask} />
+                      </div>
                     )
-                  })()}
+                  })}
+                  {tasks.filter(t => !t.phase).length > 0 && (
+                    <div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Other Tasks</div>
+                      <TaskList tasks={tasks.filter(t => !t.phase)} onToggle={toggleTask} />
+                    </div>
+                  )}
+                  {tasks.length === 0 && (
+                    <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>No tasks yet.</div>
+                  )}
                 </div>
               )}
             </div>
