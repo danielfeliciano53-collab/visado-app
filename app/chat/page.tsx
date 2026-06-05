@@ -1,6 +1,6 @@
 'use client'
-import { useState, useEffect, useRef, Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import Sidebar from '../../components/Sidebar'
 import MobileHeader from '../../components/MobileHeader'
 import { apiFetch, deleteCookie } from '../../lib/api'
@@ -40,9 +40,8 @@ const QUICK_REPLIES = [
   'What documents do I still need?',
 ]
 
-function ChatInner() {
+export default function ChatPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
@@ -79,10 +78,6 @@ function ChatInner() {
         content: `Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}${p.full_name ? ', ' + p.full_name.split(' ')[0] : ''}! Ready to help with your Portugal move. What would you like to work on today?`,
         time: now(),
       }])
-      const autoMessage = searchParams.get('message')
-      if (autoMessage) {
-        setTimeout(() => sendMessage(decodeURIComponent(autoMessage)), 500)
-      }
     } catch (e) {
       console.error('Profile load error', e)
     } finally {
@@ -276,13 +271,5 @@ function ChatInner() {
         }
       `}</style>
     </div>
-  )
-}
-
-export default function ChatPage() {
-  return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#F9F7F4', fontFamily: "'Helvetica Neue', sans-serif", color: '#6B7280', fontSize: 13 }}>Loading...</div>}>
-      <ChatInner />
-    </Suspense>
   )
 }
