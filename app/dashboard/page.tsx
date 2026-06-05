@@ -167,9 +167,12 @@ function DashboardInner() {
   const searchParams = useSearchParams()
 
   // Tab is local state — initialized from URL but controlled by clicks
-  const [activeTab, setActiveTab] = useState<'overview' | 'checklist'>(
-    searchParams.get('tab') === 'checklist' ? 'checklist' : 'overview'
-  )
+  const [activeTab, setActiveTab] = useState<'overview' | 'checklist'>('overview')
+
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    setActiveTab(tab === 'checklist' ? 'checklist' : 'overview')
+  }, [searchParams])
 
   const [data, setData] = useState<DashboardData | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
