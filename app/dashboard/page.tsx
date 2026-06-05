@@ -77,9 +77,17 @@ function ProgressRing({ progress, size = 80 }: { progress: number; size?: number
       <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={GREEN} strokeWidth={6}
         strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
         style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
-      <text x={size / 2} y={size / 2} textAnchor="middle" dominantBaseline="middle"
-        style={{ transform: `rotate(90deg) translate(0, -${size}px)`, transformOrigin: `${size / 2}px ${size / 2}px` }}
-        fill={GREEN_DARK} fontSize={16} fontWeight={700} fontFamily="'Helvetica Neue', sans-serif">
+      <text
+        x={size / 2}
+        y={size / 2}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fill={GREEN_DARK}
+        fontSize={14}
+        fontWeight={700}
+        fontFamily="Helvetica Neue, sans-serif"
+        style={{ transform: 'rotate(90deg)', transformOrigin: `${size / 2}px ${size / 2}px` }}
+      >
         {progress}%
       </text>
     </svg>
@@ -349,8 +357,14 @@ function DashboardInner() {
                       <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Current Project</div>
                       <h2 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700, color: DARK }}>{activeProject.name}</h2>
                       {currentPhase && (
-                        <div style={{ fontSize: 13, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
-                          {currentPhaseEmoji} {currentPhase} (Phase {currentPhaseNumber})
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                          <div style={{ fontSize: 13, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
+                            {currentPhaseEmoji} {currentPhase} (Phase {currentPhaseNumber})
+                          </div>
+                          <Link href={getChatUrl(currentPhase, guideName)}
+                            style={{ fontSize: 12, padding: '4px 10px', background: GREEN_LIGHT, color: GREEN_DARK, borderRadius: 8, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                            ◎ Chat about this phase
+                          </Link>
                         </div>
                       )}
                     </div>
@@ -377,12 +391,6 @@ function DashboardInner() {
                           </div>
                         ))}
                       </div>
-                      {currentPhase && (
-                        <Link href={getChatUrl(currentPhase, guideName)}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginTop: 12, padding: '8px 16px', background: GREEN_LIGHT, color: GREEN_DARK, borderRadius: 8, fontSize: 13, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none' }}>
-                          ◎ Chat with {guideName} about this phase
-                        </Link>
-                      )}
                       <Link href="/dashboard?tab=checklist" style={{ display: 'inline-block', marginTop: 12, fontSize: 13, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none' }}>
                         View full checklist →
                       </Link>
@@ -458,21 +466,17 @@ function DashboardInner() {
                           const isPhaseComplete = completedCount === group.tasks.length
                           return (
                             <div key={group.phase}>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <span style={{ fontSize: 18 }}>{group.emoji}</span>
-                                  <span style={{ fontSize: 14, fontWeight: 700, color: isPhaseComplete ? GREEN_DARK : DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
-                                    {group.phase} (Phase {getPhaseNumber(group.phase)})
-                                  </span>
-                                  {isPhaseComplete && <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Complete ✓</span>}
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>{completedCount}/{group.tasks.length}</span>
-                                  <Link href={getChatUrl(group.phase, guideName)}
-                                    style={{ fontSize: 12, padding: '5px 12px', background: GREEN_LIGHT, color: GREEN_DARK, borderRadius: 8, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                                    ◎ Chat about this phase
-                                  </Link>
-                                </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: 18 }}>{group.emoji}</span>
+                                <span style={{ fontSize: 14, fontWeight: 700, color: isPhaseComplete ? GREEN_DARK : DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
+                                  {group.phase} (Phase {getPhaseNumber(group.phase)})
+                                </span>
+                                {isPhaseComplete && <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Complete ✓</span>}
+                                <Link href={getChatUrl(group.phase, guideName)}
+                                  style={{ fontSize: 12, padding: '4px 10px', background: GREEN_LIGHT, color: GREEN_DARK, borderRadius: 8, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                                  ◎ Chat
+                                </Link>
+                                <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginLeft: 'auto' }}>{completedCount}/{group.tasks.length}</span>
                               </div>
                               <TaskList tasks={group.tasks} onToggle={toggleTask} />
                             </div>
