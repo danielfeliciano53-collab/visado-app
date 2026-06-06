@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Sidebar from '../../components/Sidebar'
 import MobileHeader from '../../components/MobileHeader'
 import { apiFetch, deleteCookie } from '../../lib/api'
@@ -49,6 +50,7 @@ export default function ChatPage() {
   const [authReady, setAuthReady] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const searchParams = useSearchParams()
 
   useEffect(() => {
     const check = () => setIsMobile((window.screen?.width || 1440) <= 768)
@@ -82,6 +84,10 @@ export default function ChatPage() {
       console.error('Profile load error', e)
     } finally {
       setAuthReady(true)
+      const autoMessage = searchParams.get('message')
+      if (autoMessage) {
+        setTimeout(() => sendMessage(decodeURIComponent(autoMessage)), 800)
+      }
     }
   }
 
