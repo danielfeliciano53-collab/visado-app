@@ -16,13 +16,19 @@ const BORDER = '#E5E7EB'
 const WARN = '#F59E0B'
 const DANGER = '#EF4444'
 
-const PHASE_ORDER = ['Laying the Groundwork', 'The Final Push', "You've Landed", 'Becoming a Resident', 'Building Your Life']
+const PHASE_ORDER = [
+  'Laying the Groundwork; Let\'s explore the journey',
+  'Document Collection & Appointment Prep',
+  'Moving to Portugal; What to expect and plan',
+  'Becoming a Resident; AIMA appointment & residency card',
+  'Building Your Life; Cars, medical, insurance & daily life',
+]
 const PHASE_EMOJI: Record<string, string> = {
-  'Laying the Groundwork': '🌱',
-  'The Final Push': '🚀',
-  "You've Landed": '✈️',
-  'Becoming a Resident': '🏛️',
-  'Building Your Life': '🏡',
+  'Laying the Groundwork; Let\'s explore the journey': '🌱',
+  'Document Collection & Appointment Prep': '📋',
+  'Moving to Portugal; What to expect and plan': '✈️',
+  'Becoming a Resident; AIMA appointment & residency card': '🏛️',
+  'Building Your Life; Cars, medical, insurance & daily life': '🏡',
 }
 
 function getPhaseNumber(phase: string): number {
@@ -39,11 +45,11 @@ function getCurrentPhase(tasks: Task[]): string {
 
 function getChatUrl(phase: string, guideName: string): string {
   const messages: Record<string, string> = {
-    'Laying the Groundwork': `I'm in the Laying the Groundwork phase of my D7 visa journey. What should I focus on first and what are the most important things to get right at this stage?`,
-    'The Final Push': `I'm in The Final Push phase — getting ready for my visa appointment. What do I need to make sure is in order before I go?`,
-    "You've Landed": `I've just arrived in Portugal and I'm in the You've Landed phase. What are the most critical things to do in my first week?`,
-    'Becoming a Resident': `I'm working on Becoming a Resident and need to tackle my AIMA appointment. What do I need to know and prepare?`,
-    'Building Your Life': `I'm in the Building Your Life phase — almost there! What should I prioritize to get fully settled in Portugal?`,
+    'Laying the Groundwork; Let\'s explore the journey': `I\'m just starting my Portugal journey and I\'m in the Laying the Groundwork phase. Help me explore the big picture — where should I live, what should I know about the D7 visa process, and what are the most important things to get right from the start? Also, should I use a service for my FBI background check and apostille?`,
+    'Document Collection & Appointment Prep': `I\'m in the Document Collection phase getting ready for my VFS or consulate appointment. What do I need to gather, how do I determine if I go to VFS or the consulate, and how do I book the appointment?`,
+    'Moving to Portugal; What to expect and plan': `I\'ve got my visa and I\'m moving to Portugal. What should I expect and plan for in my first weeks? Walk me through the most important things to do when I arrive.`,
+    'Becoming a Resident; AIMA appointment & residency card': `I\'m working on becoming a resident and need to tackle my AIMA appointment. What do I need to know, what documents do I bring, and what should I expect on the day?`,
+    'Building Your Life; Cars, medical, insurance & daily life': `I\'m in the Building Your Life phase — I want to get fully settled. Help me understand what I need to do for cars, medical registration, insurance, and everything else to live normally in Portugal.`,
   }
   const msg = encodeURIComponent(messages[phase] || `Tell me about the ${phase} phase of my Portugal journey.`)
   return `/chat?message=${msg}`
