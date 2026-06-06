@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 import Sidebar from '../../components/Sidebar'
@@ -41,7 +41,7 @@ const QUICK_REPLIES = [
   'What documents do I still need?',
 ]
 
-export default function ChatPage() {
+function ChatInner() {
   const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -277,5 +277,13 @@ export default function ChatPage() {
         }
       `}</style>
     </div>
+  )
+}
+
+export default function ChatPage() {
+  return (
+    <Suspense>
+      <ChatInner />
+    </Suspense>
   )
 }
