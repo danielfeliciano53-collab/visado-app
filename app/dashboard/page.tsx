@@ -45,8 +45,8 @@ function getCurrentPhase(tasks: Task[]): string {
 
 function getChatUrl(phase: string, guideName: string): string {
   const messages: Record<string, string> = {
-    "Laying the Groundwork; Let's explore the journey": `I'm just starting my Portugal journey. Help me explore the big picture — where should I live, what should I know about the D7 visa process, and what are the most important things to get right? Also, should I use a service for my FBI background check and apostille?`,
-    'Document Collection & Appointment Prep': `I'm in the Document Collection phase getting ready for my VFS or consulate appointment. What do I need to gather, how do I determine if I go to VFS or the consulate, and how do I book the appointment?`,
+    "Laying the Groundwork; Let's explore the journey": `I'm just starting my Portugal journey and exploring my options. Help me think through where in Portugal I want to live, why Portugal is the right move for me, and what my timeline should look like. Also — how do I determine whether I go to VFS Global or the Portuguese consulate for my visa appointment, and how far in advance should I book it?`,
+    'Document Collection & Appointment Prep': `I'm in the Document Collection phase getting ready for my visa appointment. I've already determined my VFS or consulate location. What documents do I need to gather, what's the correct order to get them, and are there any long lead items I should start immediately?`,
     'Moving to Portugal; What to expect and plan': `I've got my visa and I'm moving to Portugal. What should I expect and plan for in my first weeks? Walk me through the most important things to do when I arrive.`,
     'Becoming a Resident; AIMA appointment & residency card': `I'm working on becoming a resident and need to tackle my AIMA appointment. What do I need to know, what documents do I bring, and what should I expect on the day?`,
     "Building Your Life; Cars, medical, insurance & daily life": `I'm in the Building Your Life phase. Help me understand what I need to do for cars, medical registration, insurance, and everything else to live normally in Portugal.`,
