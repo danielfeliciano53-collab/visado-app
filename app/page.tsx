@@ -24,6 +24,7 @@ export default function HomePage() {
               <a href="#pricing" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Pricing</a>
               <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: GREEN_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Log In</Link>
             </div>
+        </div>
       </nav>
       <div style={{ height: 64 }} />
 
