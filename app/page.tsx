@@ -1,5 +1,3 @@
-'use client'
-import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 const GREEN = '#1D9E75'
@@ -11,16 +9,6 @@ const MUTED = '#6B7280'
 const BORDER = '#E5E7EB'
 
 export default function HomePage() {
-  const [menuOpen, setMenuOpen] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-
-  useEffect(() => {
-    const check = () => setIsMobile(window.innerWidth <= 768)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
-
   return (
     <div style={{ fontFamily: 'Georgia, serif', background: OFF_WHITE, color: DARK }}>
 
@@ -31,35 +19,21 @@ export default function HomePage() {
             <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: GREEN }} />
             Visado
           </div>
-          {!isMobile ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
               <a href="#how" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>How it works</a>
               <a href="#pricing" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Pricing</a>
               <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: GREEN_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Log In</Link>
             </div>
-          ) : (
-            <button onClick={() => setMenuOpen(!menuOpen)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, color: DARK, padding: 8 }}>
-              {menuOpen ? '✕' : '☰'}
-            </button>
-          )}
-        </div>
-        {isMobile && menuOpen && (
-          <div style={{ background: '#fff', borderTop: `1px solid ${BORDER}`, padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <a href="#how" onClick={() => setMenuOpen(false)} style={{ fontSize: 15, color: DARK, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>How it works</a>
-            <a href="#pricing" onClick={() => setMenuOpen(false)} style={{ fontSize: 15, color: DARK, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Pricing</a>
-            <Link href="/login" style={{ fontSize: 15, fontWeight: 600, color: '#fff', background: GREEN_DARK, padding: '12px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", textAlign: 'center' }}>Log In</Link>
-          </div>
-        )}
       </nav>
       <div style={{ height: 64 }} />
 
       {/* HERO */}
-      <section style={{ maxWidth: 1100, margin: '0 auto', padding: isMobile ? '60px 24px' : '80px 24px', display: 'flex', alignItems: 'center', gap: 60, flexWrap: 'wrap' }}>
+      <section style={{ maxWidth: 1100, margin: '0 auto', padding: '60px 24px', display: 'flex', alignItems: 'center', gap: 60, flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 400px' }}>
           <div style={{ display: 'inline-block', fontSize: 13, fontFamily: "'Helvetica Neue', sans-serif", color: GREEN_DARK, background: GREEN_LIGHT, padding: '4px 12px', borderRadius: 20, marginBottom: 24, border: `1px solid rgba(29,158,117,0.3)` }}>
             🇵🇹 Built by someone who did it
           </div>
-          <h1 style={{ fontSize: isMobile ? 36 : 56, fontWeight: 700, lineHeight: 1.15, letterSpacing: '-1.5px', margin: '0 0 20px', color: DARK }}>
+          <h1 style={{ fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, lineHeight: 1.15, letterSpacing: '-1.5px', margin: '0 0 20px', color: DARK }}>
             Your move to Portugal,<br />
             <span style={{ color: GREEN }}>without the chaos.</span>
           </h1>
@@ -119,10 +93,10 @@ export default function HomePage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how" style={{ padding: isMobile ? '60px 24px' : '100px 24px', background: '#fff' }}>
+      <section id="how" style={{ padding: '60px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: GREEN, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>How it works</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 42, fontWeight: 700, letterSpacing: '-1px', margin: '0 0 48px', color: DARK }}>From overwhelmed to on your way</h2>
+          <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 700, letterSpacing: '-1px', margin: '0 0 48px', color: DARK }}>From overwhelmed to on your way</h2>
           <div>
             {[
               { num: '01', title: 'Tell us about yourself', desc: "A quick 4-step survey. We learn who you are, where you're going, and how you like to communicate. Then we match you with Joao or Andreia — your personal guide." },
@@ -133,7 +107,7 @@ export default function HomePage() {
               <div key={i} style={{ display: 'flex', gap: 32, padding: '32px 0', borderBottom: `1px solid ${BORDER}` }}>
                 <div style={{ fontSize: 13, fontWeight: 700, color: 'rgba(0,0,0,0.15)', fontFamily: "'Helvetica Neue', sans-serif", flexShrink: 0, paddingTop: 4, width: 28 }}>{step.num}</div>
                 <div>
-                  <div style={{ fontSize: isMobile ? 18 : 20, fontWeight: 700, color: DARK, marginBottom: 8 }}>{step.title}</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: DARK, marginBottom: 8 }}>{step.title}</div>
                   <div style={{ fontSize: 15, lineHeight: 1.7, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>{step.desc}</div>
                 </div>
               </div>
@@ -143,11 +117,11 @@ export default function HomePage() {
       </section>
 
       {/* FEATURES */}
-      <section style={{ padding: isMobile ? '60px 24px' : '100px 24px', background: OFF_WHITE }}>
+      <section style={{ padding: '60px 24px', background: OFF_WHITE }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: GREEN, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>What's included</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 42, fontWeight: 700, letterSpacing: '-1px', margin: '0 0 48px', color: DARK }}>Everything you need. Nothing you don't.</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', gap: 24 }}>
+          <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 700, letterSpacing: '-1px', margin: '0 0 48px', color: DARK }}>Everything you need. Nothing you don't.</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24 }}>
             {[
               { icon: '🤖', title: 'AI guide that adapts to you', desc: 'Joao or Andreia learns your pace and communication style. Detailed or direct — your call.' },
               { icon: '🔐', title: 'Secure document vault', desc: 'Passport, NIF, medical records. Encrypted. Upload once, referenced forever.' },
@@ -167,10 +141,10 @@ export default function HomePage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" style={{ padding: isMobile ? '60px 24px' : '100px 24px', background: 'red' }}>
+      <section id="pricing" style={{ padding: '60px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: GREEN, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>Pricing</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 42, fontWeight: 700, letterSpacing: '-1px', margin: '0 0 48px', color: DARK }}>Start free. Upgrade when you're ready.</h2>
+          <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 700, letterSpacing: '-1px', margin: '0 0 48px', color: DARK }}>Start free. Upgrade when you're ready.</h2>
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
             {/* Free */}
             <div style={{ flex: '1 1 280px', background: OFF_WHITE, borderRadius: 16, padding: 32, border: `1px solid ${BORDER}` }}>
@@ -211,10 +185,10 @@ export default function HomePage() {
       </section>
 
       {/* LIFE CTA */}
-      <section style={{ background: DARK, padding: isMobile ? '60px 24px' : '100px 24px' }}>
+      <section style={{ background: DARK, padding: '60px 24px' }}>
         <div style={{ maxWidth: 640, margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: 40, marginBottom: 24 }}>🌍</div>
-          <h2 style={{ fontSize: isMobile ? 28 : 40, fontWeight: 700, color: '#fff', letterSpacing: '-1px', marginBottom: 20 }}>You've thought about this for a long time.</h2>
+          <h2 style={{ fontSize: 'clamp(28px, 4vw, 40px)', fontWeight: 700, color: '#fff', letterSpacing: '-1px', marginBottom: 20 }}>You've thought about this for a long time.</h2>
           <p style={{ fontSize: 17, lineHeight: 1.75, color: 'rgba(255,255,255,0.65)', fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 36 }}>
             Moving abroad at any age takes courage. Moving in your 50s, 60s, or 70s takes something more. Visado was built for people who have earned the right to make this choice — and who deserve a guide that understands what it means.
           </p>
