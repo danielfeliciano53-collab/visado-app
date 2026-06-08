@@ -94,7 +94,7 @@ export default function HomePage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section id="how" style={{ padding: '60px 24px', background: '#fff' }}>
+      <section style={{ padding: '60px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: GREEN, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>How it works</div>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 700, letterSpacing: '-1px', margin: '0 0 48px', color: DARK }}>From overwhelmed to on your way</h2>
@@ -142,7 +142,7 @@ export default function HomePage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" style={{ padding: '60px 24px', background: '#fff' }}>
+      <section style={{ padding: '60px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: GREEN, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>Pricing</div>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 700, letterSpacing: '-1px', margin: '0 0 48px', color: DARK }}>Start free. Upgrade when you're ready.</h2>
