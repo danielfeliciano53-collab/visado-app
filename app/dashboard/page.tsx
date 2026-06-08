@@ -45,7 +45,7 @@ function getCurrentPhase(tasks: Task[]): string {
 
 function getChatUrl(phase: string, guideName: string): string {
   const messages: Record<string, string> = {
-    "Laying the Groundwork; Let's explore the journey": `I'm just starting to think about moving to Portugal. I don't know where to begin.`,
+    "Laying the Groundwork; Let's explore the journey": `Hi, I'm just starting to think about moving to Portugal. Get to know me and help me figure out where to begin.`,
     'Document Collection & Appointment Prep': `I'm in the Document Collection phase getting ready for my visa appointment. I've already determined my VFS or consulate location. What documents do I need to gather, what's the correct order to get them, and are there any long lead items I should start immediately?`,
     'Moving to Portugal; What to expect and plan': `I've got my visa and I'm moving to Portugal. What should I expect and plan for in my first weeks? Walk me through the most important things to do when I arrive.`,
     'Becoming a Resident; AIMA appointment & residency card': `I'm working on becoming a resident and need to tackle my AIMA appointment. What do I need to know, what documents do I bring, and what should I expect on the day?`,
