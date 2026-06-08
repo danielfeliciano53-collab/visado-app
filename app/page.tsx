@@ -22,10 +22,10 @@ export default function HomePage() {
   }, [])
 
   return (
-    <div style={{ fontFamily: 'Georgia, serif', background: OFF_WHITE, color: DARK, maxWidth: '100vw', overflowX: 'clip' }}>
+    <div style={{ fontFamily: 'Georgia, serif', background: OFF_WHITE, color: DARK }}>
 
       {/* NAV */}
-      <nav style={{ position: 'sticky', top: 0, background: 'rgba(249,247,244,0.95)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${BORDER}`, zIndex: 100, padding: '0 24px' }}>
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, background: 'rgba(249,247,244,0.95)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${BORDER}`, zIndex: 100, padding: '0 24px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px', color: GREEN_DARK }}>
             <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: GREEN }} />
@@ -51,6 +51,7 @@ export default function HomePage() {
           </div>
         )}
       </nav>
+      <div style={{ height: 64 }} />
 
       {/* HERO */}
       <section style={{ maxWidth: 1100, margin: '0 auto', padding: isMobile ? '60px 24px' : '80px 24px', display: 'flex', alignItems: 'center', gap: 60, flexWrap: 'wrap' }}>
