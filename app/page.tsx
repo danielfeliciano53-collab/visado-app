@@ -167,7 +167,7 @@ export default function HomePage() {
       </section>
 
       {/* PRICING */}
-      <section id="pricing" style={{ padding: isMobile ? '60px 24px' : '100px 24px', background: '#fff' }}>
+      <section id="pricing" style={{ padding: isMobile ? '60px 24px' : '100px 24px', background: 'red' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: GREEN, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>Pricing</div>
           <h2 style={{ fontSize: isMobile ? 28 : 42, fontWeight: 700, letterSpacing: '-1px', margin: '0 0 48px', color: DARK }}>Start free. Upgrade when you're ready.</h2>
