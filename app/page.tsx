@@ -22,7 +22,7 @@ export default function HomePage() {
   }, [])
 
   return (
-    <div style={{ fontFamily: 'Georgia, serif', background: OFF_WHITE, color: DARK, overflowX: 'hidden' }}>
+    <div style={{ fontFamily: 'Georgia, serif', background: OFF_WHITE, color: DARK, maxWidth: '100vw', overflowX: 'clip' }}>
 
       {/* NAV */}
       <nav style={{ position: 'sticky', top: 0, background: 'rgba(249,247,244,0.95)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${BORDER}`, zIndex: 100, padding: '0 24px' }}>
