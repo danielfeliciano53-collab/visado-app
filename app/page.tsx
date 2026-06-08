@@ -25,7 +25,7 @@ export default function HomePage() {
     <div style={{ fontFamily: 'Georgia, serif', background: OFF_WHITE, color: DARK }}>
 
       {/* NAV */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, background: 'rgba(249,247,244,0.95)', backdropFilter: 'blur(8px)', borderBottom: `1px solid ${BORDER}`, zIndex: 100, padding: '0 24px' }}>
+      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, background: 'rgba(249,247,244,0.95)', borderBottom: `1px solid ${BORDER}`, zIndex: 100, padding: '0 24px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px', color: GREEN_DARK }}>
             <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: GREEN }} />
