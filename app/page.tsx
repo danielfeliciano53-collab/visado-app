@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import CookieBanner from '../components/CookieBanner'
 
 const GREEN = '#1D9E75'
 const GREEN_DARK = '#0F6E56'
@@ -163,8 +164,8 @@ export default function HomePage() {
             Visado
           </div>
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-            <a href="https://visado-backend.vercel.app/privacy" target="_blank" style={{ fontSize: 13, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Privacy Policy</a>
-            <a href="https://visado-backend.vercel.app/terms" target="_blank" style={{ fontSize: 13, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Terms of Service</a>
+            <Link href="/privacy" style={{ fontSize: 13, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Privacy Policy</Link>
+            <Link href="/terms" style={{ fontSize: 13, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Terms of Service</Link>
             <Link href="/contact" style={{ fontSize: 13, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Contact</Link>
           </div>
           <div style={{ flexBasis: '100%', fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>
@@ -172,6 +173,7 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+      <CookieBanner />
     </div>
   )
 }
