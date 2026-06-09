@@ -2,30 +2,12 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-const SUPABASE_URL = 'https://jmvdlarhnhxmjfxbaevx.supabase.co'
-const SUPABASE_ANON_KEY = 'sb_publishable_V4BvKt1imLXlAz_qp08ZrQ_toWAHqBg'
 const BACKEND_URL = 'https://visado-backend.vercel.app'
 
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=604800; SameSite=Lax; Secure`
 }
 
-async function supabaseFetch(path: string, options: RequestInit = {}) {
-  const res = await fetch(`${SUPABASE_URL}/auth/v1${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      apikey: SUPABASE_ANON_KEY,
-      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-      ...(options.headers || {}),
-    },
-  })
-  const data = await res.json()
-  if (!res.ok) {
-    return { error: true, error_description: data.error_description || data.msg || data.message || 'Authentication failed.' }
-  }
-  return data
-}
 
 export default function LoginPage() {
   const router = useRouter()
@@ -46,7 +28,7 @@ export default function LoginPage() {
   }, [])
 
   function handleGoogleLogin() {
-    window.location.href = `${SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent('https://app.visadoapp.com/dashboard')}`
+    window.location.href = `${BACKEND_URL}/api/auth/google`
   }
 
   async function handleLogin(e: React.FormEvent) {
@@ -54,12 +36,14 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     try {
-      const data = await supabaseFetch('/token?grant_type=password', {
+      const res = await fetch(`${BACKEND_URL}/api/login`, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
       })
-      if (data.error) {
-        setError(data.error_description || 'Incorrect email or password.')
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        setError(data.error || 'Incorrect email or password.')
       } else {
         setCookie('visado_token', data.access_token)
         setCookie('visado_user', JSON.stringify(data.user))
@@ -87,12 +71,14 @@ export default function LoginPage() {
     setError('')
     setSuccess('')
     try {
-      const data = await supabaseFetch('/signup', {
+      const res = await fetch(`${BACKEND_URL}/api/signup`, {
         method: 'POST',
-        body: JSON.stringify({ email, password, data: { full_name: name } }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, full_name: name }),
       })
-      if (data.error) {
-        setError(data.error_description || 'Signup failed. Please try again.')
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error || 'Signup failed. Please try again.')
       } else {
         setSuccess('Check your email to confirm your account, then come back to log in.')
         setEmail('')
