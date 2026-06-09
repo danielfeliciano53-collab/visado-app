@@ -21,6 +21,12 @@ export default function LoginPage() {
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
+    if (typeof window !== 'undefined' && !window.location.hostname.startsWith('app.')) {
+      window.location.href = 'https://app.visadoapp.com/login'
+    }
+  }, [])
+
+  useEffect(() => {
     const check = () => setIsMobile(window.innerWidth <= 768)
     check()
     window.addEventListener('resize', check)
