@@ -45,18 +45,12 @@ export default function LoginPage() {
       if (!res.ok || data.error) {
         setError(data.error || 'Incorrect email or password.')
       } else {
-        setCookie('visado_token', data.access_token)
+        setCookie('visado_token', data.token || data.access_token)
         setCookie('visado_user', JSON.stringify(data.user))
-        try {
-          const profileRes = await fetch(`${BACKEND_URL}/api/profile`, {
-            headers: { Authorization: `Bearer ${data.access_token}` },
-          })
-          const profileJson = await profileRes.json()
-          if (!profileJson.profile?.onboarding_done) {
-            router.push('/onboarding')
-            return
-          }
-        } catch {}
+        if (!data.onboardingComplete) {
+          router.push('/onboarding')
+          return
+        }
         router.push('/dashboard')
       }
     } catch {
