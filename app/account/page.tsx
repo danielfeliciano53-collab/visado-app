@@ -74,6 +74,7 @@ export default function AccountPage() {
   const [newPassword, setNewPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [cancelConfirm, setCancelConfirm] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState(false)
 
   useEffect(() => {
     const check = () => setIsMobile((window.screen?.width || 1440) <= 768)
@@ -180,6 +181,22 @@ export default function AccountPage() {
     deleteCookie('visado_token')
     deleteCookie('visado_user')
     router.push('/login')
+  }
+
+  async function handleDeleteAccount() {
+    try {
+      const res = await apiFetch('/api/delete-account', { method: 'DELETE' })
+      if (res.ok) {
+        deleteCookie('visado_token')
+        deleteCookie('visado_user')
+        router.push('/')
+      } else {
+        const err = await res.json()
+        setErrorMsg(err.error || 'Failed to delete account. Please contact support.')
+      }
+    } catch (e) {
+      setErrorMsg('Connection error. Please try again.')
+    }
   }
 
   if (loading) {
@@ -359,10 +376,34 @@ export default function AccountPage() {
 
           {/* Danger zone */}
           <Section title="Session">
-            <button onClick={handleLogout}
-              style={{ padding: '10px 24px', background: '#fff', color: DANGER, border: `1px solid #FCA5A5`, borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif" }}>
-              Log out
-            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <button onClick={handleLogout}
+                style={{ padding: '10px 24px', background: '#fff', color: DANGER, border: `1px solid #FCA5A5`, borderRadius: 8, fontSize: 14, fontWeight: 600, cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif", alignSelf: 'flex-start' }}>
+                Log out
+              </button>
+              {!deleteConfirm ? (
+                <button onClick={() => setDeleteConfirm(true)}
+                  style={{ padding: '10px 24px', background: 'none', color: MUTED, border: 'none', fontSize: 13, cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif", textDecoration: 'underline', alignSelf: 'flex-start', paddingLeft: 0 }}>
+                  Delete my account and all data
+                </button>
+              ) : (
+                <div style={{ background: '#FEF2F2', border: '1px solid #FCA5A5', borderRadius: 8, padding: 16 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: DARK, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 8 }}>
+                    This will permanently delete your account, all documents, and all data. This cannot be undone.
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={handleDeleteAccount}
+                      style={{ padding: '8px 16px', background: DANGER, color: '#fff', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif" }}>
+                      Yes, delete everything
+                    </button>
+                    <button onClick={() => setDeleteConfirm(false)}
+                      style={{ padding: '8px 16px', background: '#fff', color: MUTED, border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13, cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif" }}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </Section>
 
         </div>
