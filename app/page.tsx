@@ -21,8 +21,7 @@ export default function HomePage() {
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
               <a href="#how" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>How it works</a>
-              <a href="#pricing" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Pricing</a>
-              <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: GREEN_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Log In</Link>
+<Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: GREEN_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Log In</Link>
             </div>
         </div>
       </nav>
@@ -137,50 +136,6 @@ export default function HomePage() {
                 <div style={{ fontSize: 14, lineHeight: 1.65, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>{f.desc}</div>
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-
-      {/* PRICING */}
-      <section style={{ padding: '60px 24px', background: '#fff' }}>
-        <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: GREEN, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>Pricing</div>
-          <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 700, letterSpacing: '-1px', margin: '0 0 48px', color: DARK }}>Start free. Upgrade when you're ready.</h2>
-          <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start' }}>
-            {/* Free */}
-            <div style={{ flex: '1 1 280px', background: OFF_WHITE, borderRadius: 16, padding: 32, border: `1px solid ${BORDER}` }}>
-              <div style={{ fontSize: 14, fontWeight: 600, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 8 }}>Free</div>
-              <div style={{ fontSize: 48, fontWeight: 700, color: DARK, letterSpacing: '-2px', marginBottom: 4 }}>$0<span style={{ fontSize: 18, fontWeight: 400, color: MUTED }}>/mo</span></div>
-              <div style={{ fontSize: 14, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 24 }}>Get your bearings</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
-                {['D7 visa checklist', 'Document list', 'Country overview', 'Basic guidance'].map((f, i) => (
-                  <div key={i} style={{ fontSize: 14, color: DARK, fontFamily: "'Helvetica Neue', sans-serif", display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: GREEN, fontWeight: 700 }}>✓</span>{f}
-                  </div>
-                ))}
-              </div>
-              <Link href="/login" style={{ display: 'block', textAlign: 'center', padding: '13px', borderRadius: 10, border: `2px solid ${GREEN_DARK}`, color: GREEN_DARK, fontWeight: 600, fontSize: 15, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>
-                Get started free
-              </Link>
-            </div>
-            {/* Pro */}
-            <div style={{ flex: '1 1 280px', background: GREEN_DARK, borderRadius: 16, padding: 32, position: 'relative' }}>
-              <div style={{ position: 'absolute', top: -12, left: 32, fontSize: 11, fontWeight: 700, color: GREEN_DARK, background: '#9FE1CB', padding: '3px 10px', borderRadius: 20, fontFamily: "'Helvetica Neue', sans-serif" }}>Most popular</div>
-              <div style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.7)', fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 8 }}>Pro</div>
-              <div style={{ fontSize: 48, fontWeight: 700, color: '#fff', letterSpacing: '-2px', marginBottom: 4 }}>$19<span style={{ fontSize: 18, fontWeight: 400, color: 'rgba(255,255,255,0.6)' }}>/mo</span></div>
-              <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 24 }}>Everything you need</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
-                {['Everything in Free', 'Joao or Andreia AI guide', 'Secure document vault', 'Adaptive pacing + tone', 'Deadline tracker', 'Weekly updated info', 'Priority support'].map((f, i) => (
-                  <div key={i} style={{ fontSize: 14, color: '#E1F5EE', fontFamily: "'Helvetica Neue', sans-serif", display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: '#9FE1CB', fontWeight: 700 }}>✓</span>{f}
-                  </div>
-                ))}
-              </div>
-              <Link href="/login" style={{ display: 'block', textAlign: 'center', padding: '13px', borderRadius: 10, background: '#fff', color: GREEN_DARK, fontWeight: 700, fontSize: 15, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>
-                Start with Pro →
-              </Link>
-              <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.5)', fontFamily: "'Helvetica Neue', sans-serif", marginTop: 10 }}>Cancel anytime</div>
-            </div>
           </div>
         </div>
       </section>
