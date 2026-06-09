@@ -67,6 +67,24 @@ function ChatInner() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
+  async function loadHistory() {
+    try {
+      const res = await apiFetch('/api/chat/history')
+      if (res.ok) {
+        const data = await res.json()
+        if (data.messages && data.messages.length > 0) {
+          setMessages(data.messages.map((m: any) => ({
+            role: m.role,
+            content: m.content,
+            time: new Date(m.created_at).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
+          })))
+        }
+      }
+    } catch (e) {
+      console.error('History load error', e)
+    }
+  }
+
   async function loadProfile() {
     try {
       const res = await apiFetch('/api/profile')
@@ -84,6 +102,7 @@ function ChatInner() {
       console.error('Profile load error', e)
     } finally {
       setAuthReady(true)
+      await loadHistory()
       const autoMessage = searchParams.get('message')
       if (autoMessage) {
         setTimeout(() => sendMessage(decodeURIComponent(autoMessage)), 800)
