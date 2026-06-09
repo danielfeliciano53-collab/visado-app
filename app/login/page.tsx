@@ -7,7 +7,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_V4BvKt1imLXlAz_qp08ZrQ_toWAHqBg'
 const BACKEND_URL = 'https://visado-backend.vercel.app'
 
 function setCookie(name: string, value: string) {
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=604800; SameSite=Lax`
+  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=604800; SameSite=Lax; Secure`
 }
 
 async function supabaseFetch(path: string, options: RequestInit = {}) {
