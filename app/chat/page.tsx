@@ -3,7 +3,6 @@ import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSearchParams } from 'next/navigation'
 import Sidebar from '../../components/Sidebar'
-import MobileHeader from '../../components/MobileHeader'
 import { apiFetch, deleteCookie } from '../../lib/api'
 
 const GREEN = '#1D9E75'
@@ -30,6 +29,17 @@ interface Profile {
   visa_type?: string
 }
 
+interface SuggestedTask {
+  title: string
+  category: string
+  tips?: string
+}
+
+interface SuggestedTasksPayload {
+  tasks: SuggestedTask[]
+  isPro: boolean
+}
+
 function now() {
   return new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
 }
@@ -41,6 +51,105 @@ const QUICK_REPLIES = [
   'What documents do I still need?',
 ]
 
+function TaskConfirmCard({ tasks, isPro, guideName, userId, onDismiss }: {
+  tasks: SuggestedTask[]
+  isPro: boolean
+  guideName: string
+  userId?: string
+  onDismiss: () => void
+}) {
+  const [added, setAdded] = useState<Record<number, 'idle' | 'adding' | 'done' | 'exists'>>({})
+
+  async function addTask(task: SuggestedTask, index: number) {
+    setAdded(prev => ({ ...prev, [index]: 'adding' }))
+    try {
+      const res = await apiFetch('/api/checklist/add', {
+        method: 'POST',
+        body: JSON.stringify({
+          title: task.title,
+          category: task.category,
+          tips: task.tips || null,
+          userId,
+        }),
+      })
+      const data = await res.json()
+      setAdded(prev => ({ ...prev, [index]: data.added === false ? 'exists' : 'done' }))
+    } catch {
+      setAdded(prev => ({ ...prev, [index]: 'idle' }))
+    }
+  }
+
+  const allHandled = tasks.every((_, i) => added[i] === 'done' || added[i] === 'exists')
+
+  return (
+    <div style={{
+      margin: '4px 0 4px 36px',
+      background: GREEN_LIGHT,
+      border: `1px solid ${GREEN}`,
+      borderRadius: 12,
+      padding: '12px 14px',
+      fontFamily: "'Helvetica Neue', sans-serif",
+      maxWidth: '75%',
+    }}>
+      <div style={{ fontSize: 12, fontWeight: 600, color: GREEN_DARK, marginBottom: 10 }}>
+        {guideName} suggests adding to your checklist:
+      </div>
+      {tasks.map((task, i) => {
+        const state = added[i] || 'idle'
+        return (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
+            gap: 10, marginBottom: i < tasks.length - 1 ? 8 : 0,
+            paddingBottom: i < tasks.length - 1 ? 8 : 0,
+            borderBottom: i < tasks.length - 1 ? `1px solid rgba(29,158,117,0.2)` : 'none',
+          }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 13, fontWeight: 500, color: DARK, lineHeight: 1.4 }}>{task.title}</div>
+              {task.tips && (
+                <div style={{ fontSize: 11, color: MUTED, marginTop: 2, lineHeight: 1.4 }}>{task.tips}</div>
+              )}
+            </div>
+            {state === 'idle' && (
+              <button
+                onClick={() => addTask(task, i)}
+                style={{
+                  flexShrink: 0, fontSize: 12, fontWeight: 600, padding: '5px 12px',
+                  background: GREEN_DARK, color: '#fff', border: 'none', borderRadius: 8,
+                  cursor: 'pointer', whiteSpace: 'nowrap',
+                }}>
+                Add it
+              </button>
+            )}
+            {state === 'adding' && (
+              <span style={{ flexShrink: 0, fontSize: 12, color: MUTED }}>Adding...</span>
+            )}
+            {state === 'done' && (
+              <span style={{ flexShrink: 0, fontSize: 12, color: GREEN_DARK, fontWeight: 600 }}>✓ Added</span>
+            )}
+            {state === 'exists' && (
+              <span style={{ flexShrink: 0, fontSize: 12, color: MUTED }}>Already there</span>
+            )}
+          </div>
+        )
+      })}
+      {!isPro && (
+        <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid rgba(29,158,117,0.2)`, fontSize: 11, color: GREEN_DARK }}>
+          🌟 <strong>Pro tip:</strong> Upgrade to Pro and {guideName} will track tasks automatically.{' '}
+          <a href="/account" style={{ color: GREEN_DARK, fontWeight: 600 }}>Upgrade →</a>
+        </div>
+      )}
+      <button
+        onClick={onDismiss}
+        style={{
+          marginTop: 10, fontSize: 11, color: MUTED, background: 'none',
+          border: 'none', cursor: 'pointer', padding: 0, display: 'block',
+        }}>
+        {allHandled ? 'Dismiss' : 'Dismiss without adding'}
+      </button>
+    </div>
+  )
+}
+
 function ChatInner() {
   const router = useRouter()
   const [messages, setMessages] = useState<Message[]>([])
@@ -49,6 +158,7 @@ function ChatInner() {
   const [profile, setProfile] = useState<Profile>({})
   const [authReady, setAuthReady] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [pendingTasks, setPendingTasks] = useState<SuggestedTasksPayload | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const searchParams = useSearchParams()
 
@@ -65,7 +175,7 @@ function ChatInner() {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, pendingTasks])
 
   async function loadHistory() {
     try {
@@ -92,7 +202,6 @@ function ChatInner() {
       const data = await res.json()
       const p = data.profile || {}
       setProfile(p)
-      const guideName = p.guide_choice === 'andreia' ? 'Andreia' : 'Joao'
       setMessages([{
         role: 'assistant',
         content: `Good ${new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}${p.full_name ? ', ' + p.full_name.split(' ')[0] : ''}! Ready to help with your Portugal move. What would you like to work on today?`,
@@ -114,6 +223,7 @@ function ChatInner() {
     const userMsg = text || input.trim()
     if (!userMsg) return
     setInput('')
+    setPendingTasks(null)
     const newMessages: Message[] = [...messages, { role: 'user', content: userMsg, time: now() }]
     setMessages(newMessages)
     setLoading(true)
@@ -127,7 +237,11 @@ function ChatInner() {
       })
       if (res.ok) {
         const data = await res.json()
-        setMessages(prev => [...prev, { role: 'assistant', content: data.message?.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1') || '', time: now() }])
+        const clean = data.message?.replace(/\*\*(.*?)\*\*/g, '$1').replace(/\*(.*?)\*/g, '$1') || ''
+        setMessages(prev => [...prev, { role: 'assistant', content: clean, time: now() }])
+        if (data.suggestedTasks?.tasks?.length > 0) {
+          setPendingTasks(data.suggestedTasks)
+        }
       } else {
         setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, something went wrong. Please try again.', time: now() }])
       }
@@ -201,31 +315,43 @@ function ChatInner() {
           <div style={{ textAlign: 'center', fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 4 }}>Today</div>
 
           {messages.map((msg, i) => (
-            <div key={i} style={{ display: 'flex', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 8 }}>
-              {msg.role === 'assistant' && (
-                <div style={{ width: 28, height: 28, borderRadius: '50%', background: GREEN_DARK, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
-                  {guideName[0]}
-                </div>
-              )}
-              <div style={{
-                maxWidth: '75%',
-                padding: '10px 14px',
-                borderRadius: 16,
-                fontSize: 14,
-                lineHeight: 1.65,
-                fontFamily: "'Helvetica Neue', sans-serif",
-                wordBreak: 'break-word',
-                overflowWrap: 'break-word',
-                whiteSpace: 'pre-wrap',
-                ...(msg.role === 'user'
-                  ? { background: GREEN_DARK, color: '#fff', borderBottomRightRadius: 4 }
-                  : { background: '#fff', border: `1px solid ${BORDER}`, borderBottomLeftRadius: 4, color: DARK })
-              }}>
-                {msg.content}
-                <div style={{ fontSize: 11, marginTop: 6, fontFamily: "'Helvetica Neue', sans-serif", ...(msg.role === 'user' ? { color: 'rgba(255,255,255,0.6)', textAlign: 'right' } : { color: MUTED }) }}>
-                  {msg.time}
+            <div key={i}>
+              <div style={{ display: 'flex', flexDirection: msg.role === 'user' ? 'row-reverse' : 'row', alignItems: 'flex-end', gap: 8 }}>
+                {msg.role === 'assistant' && (
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: GREEN_DARK, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
+                    {guideName[0]}
+                  </div>
+                )}
+                <div style={{
+                  maxWidth: '75%',
+                  padding: '10px 14px',
+                  borderRadius: 16,
+                  fontSize: 14,
+                  lineHeight: 1.65,
+                  fontFamily: "'Helvetica Neue', sans-serif",
+                  wordBreak: 'break-word',
+                  overflowWrap: 'break-word',
+                  whiteSpace: 'pre-wrap',
+                  ...(msg.role === 'user'
+                    ? { background: GREEN_DARK, color: '#fff', borderBottomRightRadius: 4 }
+                    : { background: '#fff', border: `1px solid ${BORDER}`, borderBottomLeftRadius: 4, color: DARK })
+                }}>
+                  {msg.content}
+                  <div style={{ fontSize: 11, marginTop: 6, fontFamily: "'Helvetica Neue', sans-serif", ...(msg.role === 'user' ? { color: 'rgba(255,255,255,0.6)', textAlign: 'right' } : { color: MUTED }) }}>
+                    {msg.time}
+                  </div>
                 </div>
               </div>
+
+              {/* Task confirmation card — appears after the last assistant message */}
+              {msg.role === 'assistant' && i === messages.length - 1 && pendingTasks && (
+                <TaskConfirmCard
+                  tasks={pendingTasks.tasks}
+                  isPro={pendingTasks.isPro}
+                  guideName={guideName}
+                  onDismiss={() => setPendingTasks(null)}
+                />
+              )}
             </div>
           ))}
 
@@ -260,7 +386,7 @@ function ChatInner() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Input bar — fixed to bottom on mobile */}
+        {/* Input bar */}
         <div style={{ flexShrink: 0, padding: '10px 12px 20px', background: '#fff', borderTop: `1px solid ${BORDER}`, boxSizing: 'border-box' }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
             <textarea
