@@ -13,8 +13,6 @@ const DARK = '#111510'
 const MUTED = '#6B7280'
 const BORDER = '#E5E7EB'
 
-const BACKEND = 'https://visado-backend.vercel.app'
-
 interface Message {
   role: 'user' | 'assistant'
   content: string
@@ -51,17 +49,29 @@ const QUICK_REPLIES = [
   'What documents do I still need?',
 ]
 
-function TaskConfirmCard({ tasks, isPro, guideName, userId, onDismiss }: {
+function TaskConfirmCard({ tasks, isPro, guideName, onAllDismissed }: {
   tasks: SuggestedTask[]
   isPro: boolean
   guideName: string
-  userId?: string
-  onDismiss: () => void
+  onAllDismissed: () => void
 }) {
-  const [added, setAdded] = useState<Record<number, 'idle' | 'adding' | 'done' | 'exists'>>({})
+  const [states, setStates] = useState<Record<number, 'idle' | 'adding' | 'done' | 'exists' | 'no'>>(
+    Object.fromEntries(tasks.map((_, i) => [i, 'idle']))
+  )
+
+  useEffect(() => {
+    const allHandled = tasks.every((_, i) => {
+      const s = states[i]
+      return s === 'done' || s === 'exists' || s === 'no'
+    })
+    if (allHandled) {
+      const t = setTimeout(onAllDismissed, 800)
+      return () => clearTimeout(t)
+    }
+  }, [states])
 
   async function addTask(task: SuggestedTask, index: number) {
-    setAdded(prev => ({ ...prev, [index]: 'adding' }))
+    setStates(prev => ({ ...prev, [index]: 'adding' }))
     try {
       const res = await apiFetch('/api/checklist/add', {
         method: 'POST',
@@ -69,17 +79,17 @@ function TaskConfirmCard({ tasks, isPro, guideName, userId, onDismiss }: {
           title: task.title,
           category: task.category,
           tips: task.tips || null,
-          userId,
         }),
       })
       const data = await res.json()
-      setAdded(prev => ({ ...prev, [index]: data.added === false ? 'exists' : 'done' }))
+      setStates(prev => ({ ...prev, [index]: data.added === false ? 'exists' : 'done' }))
     } catch {
-      setAdded(prev => ({ ...prev, [index]: 'idle' }))
+      setStates(prev => ({ ...prev, [index]: 'idle' }))
     }
   }
 
-  const allHandled = tasks.every((_, i) => added[i] === 'done' || added[i] === 'exists')
+  const visibleTasks = tasks.filter((_, i) => states[i] !== 'no')
+  if (visibleTasks.length === 0) return null
 
   return (
     <div style={{
@@ -94,8 +104,10 @@ function TaskConfirmCard({ tasks, isPro, guideName, userId, onDismiss }: {
       <div style={{ fontSize: 12, fontWeight: 600, color: GREEN_DARK, marginBottom: 10 }}>
         {guideName} suggests adding to your checklist:
       </div>
+
       {tasks.map((task, i) => {
-        const state = added[i] || 'idle'
+        const state = states[i]
+        if (state === 'no') return null
         return (
           <div key={i} style={{
             display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
@@ -109,43 +121,39 @@ function TaskConfirmCard({ tasks, isPro, guideName, userId, onDismiss }: {
                 <div style={{ fontSize: 11, color: MUTED, marginTop: 2, lineHeight: 1.4 }}>{task.tips}</div>
               )}
             </div>
-            {state === 'idle' && (
-              <button
-                onClick={() => addTask(task, i)}
-                style={{
-                  flexShrink: 0, fontSize: 12, fontWeight: 600, padding: '5px 12px',
-                  background: GREEN_DARK, color: '#fff', border: 'none', borderRadius: 8,
-                  cursor: 'pointer', whiteSpace: 'nowrap',
-                }}>
-                Add it
-              </button>
-            )}
-            {state === 'adding' && (
-              <span style={{ flexShrink: 0, fontSize: 12, color: MUTED }}>Adding...</span>
-            )}
-            {state === 'done' && (
-              <span style={{ flexShrink: 0, fontSize: 12, color: GREEN_DARK, fontWeight: 600 }}>✓ Added</span>
-            )}
-            {state === 'exists' && (
-              <span style={{ flexShrink: 0, fontSize: 12, color: MUTED }}>Already there</span>
-            )}
+            <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+              {state === 'idle' && (
+                <>
+                  <button onClick={() => addTask(task, i)} style={{
+                    fontSize: 12, fontWeight: 600, padding: '5px 12px',
+                    background: GREEN_DARK, color: '#fff', border: 'none', borderRadius: 8,
+                    cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}>
+                    Add it
+                  </button>
+                  <button onClick={() => setStates(prev => ({ ...prev, [i]: 'no' }))} style={{
+                    fontSize: 12, fontWeight: 500, padding: '5px 10px',
+                    background: '#fff', color: MUTED, border: `1px solid ${BORDER}`,
+                    borderRadius: 8, cursor: 'pointer', whiteSpace: 'nowrap',
+                  }}>
+                    No
+                  </button>
+                </>
+              )}
+              {state === 'adding' && <span style={{ fontSize: 12, color: MUTED }}>Adding...</span>}
+              {state === 'done' && <span style={{ fontSize: 12, color: GREEN_DARK, fontWeight: 600 }}>✓ Added</span>}
+              {state === 'exists' && <span style={{ fontSize: 12, color: MUTED }}>Already there</span>}
+            </div>
           </div>
         )
       })}
+
       {!isPro && (
         <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid rgba(29,158,117,0.2)`, fontSize: 11, color: GREEN_DARK }}>
           🌟 <strong>Pro tip:</strong> Upgrade to Pro and {guideName} will track tasks automatically.{' '}
           <a href="/account" style={{ color: GREEN_DARK, fontWeight: 600 }}>Upgrade →</a>
         </div>
       )}
-      <button
-        onClick={onDismiss}
-        style={{
-          marginTop: 10, fontSize: 11, color: MUTED, background: 'none',
-          border: 'none', cursor: 'pointer', padding: 0, display: 'block',
-        }}>
-        {allHandled ? 'Dismiss' : 'Dismiss without adding'}
-      </button>
     </div>
   )
 }
@@ -169,9 +177,7 @@ function ChatInner() {
     return () => window.removeEventListener('resize', check)
   }, [])
 
-  useEffect(() => {
-    loadProfile()
-  }, [])
+  useEffect(() => { loadProfile() }, [])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -281,7 +287,6 @@ function ChatInner() {
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100dvh', overflow: 'hidden' }}>
 
-        {/* Mobile header */}
         {isMobile && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 56, background: '#fff', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', zIndex: 100 }}>
             <a href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18, fontWeight: 700, color: GREEN_DARK, textDecoration: 'none' }}>
@@ -291,7 +296,6 @@ function ChatInner() {
           </div>
         )}
 
-        {/* Chat header */}
         <div style={{ paddingTop: isMobile ? 56 : 0, flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#fff', borderBottom: `1px solid ${BORDER}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -310,7 +314,6 @@ function ChatInner() {
           </div>
         </div>
 
-        {/* Messages */}
         <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden', padding: '16px 12px', display: 'flex', flexDirection: 'column', gap: 16, boxSizing: 'border-box' }}>
           <div style={{ textAlign: 'center', fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 4 }}>Today</div>
 
@@ -323,15 +326,9 @@ function ChatInner() {
                   </div>
                 )}
                 <div style={{
-                  maxWidth: '75%',
-                  padding: '10px 14px',
-                  borderRadius: 16,
-                  fontSize: 14,
-                  lineHeight: 1.65,
-                  fontFamily: "'Helvetica Neue', sans-serif",
-                  wordBreak: 'break-word',
-                  overflowWrap: 'break-word',
-                  whiteSpace: 'pre-wrap',
+                  maxWidth: '75%', padding: '10px 14px', borderRadius: 16, fontSize: 14,
+                  lineHeight: 1.65, fontFamily: "'Helvetica Neue', sans-serif",
+                  wordBreak: 'break-word', overflowWrap: 'break-word', whiteSpace: 'pre-wrap',
                   ...(msg.role === 'user'
                     ? { background: GREEN_DARK, color: '#fff', borderBottomRightRadius: 4 }
                     : { background: '#fff', border: `1px solid ${BORDER}`, borderBottomLeftRadius: 4, color: DARK })
@@ -343,19 +340,17 @@ function ChatInner() {
                 </div>
               </div>
 
-              {/* Task confirmation card — appears after the last assistant message */}
               {msg.role === 'assistant' && i === messages.length - 1 && pendingTasks && (
                 <TaskConfirmCard
                   tasks={pendingTasks.tasks}
                   isPro={pendingTasks.isPro}
                   guideName={guideName}
-                  onDismiss={() => setPendingTasks(null)}
+                  onAllDismissed={() => setPendingTasks(null)}
                 />
               )}
             </div>
           ))}
 
-          {/* Typing indicator */}
           {loading && (
             <div style={{ display: 'flex', alignItems: 'flex-end', gap: 8 }}>
               <div style={{ width: 28, height: 28, borderRadius: '50%', background: GREEN_DARK, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 12, flexShrink: 0 }}>
@@ -371,7 +366,6 @@ function ChatInner() {
             </div>
           )}
 
-          {/* Quick replies — show after first message only */}
           {messages.length <= 1 && !loading && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
               {QUICK_REPLIES.map((qr, i) => (
@@ -386,7 +380,6 @@ function ChatInner() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Input bar */}
         <div style={{ flexShrink: 0, padding: '10px 12px 20px', background: '#fff', borderTop: `1px solid ${BORDER}`, boxSizing: 'border-box' }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
             <textarea
