@@ -5,6 +5,22 @@ import Link from 'next/link'
 import Sidebar from '../../components/Sidebar'
 import MobileHeader from '../../components/MobileHeader'
 import { apiFetch, deleteCookie } from '../../lib/api'
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 
 const GREEN = '#1D9E75'
 const GREEN_DARK = '#0F6E56'
@@ -178,32 +194,44 @@ function TaskList({ tasks, onToggle }: { tasks: Task[], onToggle: (t: Task) => v
   )
 }
 
-function ChatTaskList({ items, onToggle }: { items: ChecklistItem[], onToggle: (item: ChecklistItem) => void }) {
+function SortableChatTask({ item, onToggle }: { item: ChecklistItem, onToggle: (item: ChecklistItem) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : item.status === 'completed' ? 0.6 : 1,
+  }
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {items.map(item => (
-        <div key={item.id} style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden', opacity: item.status === 'completed' ? 0.6 : 1 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px' }}>
-            <div onClick={() => onToggle(item)}
-              style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${item.status === 'completed' ? GREEN : BORDER}`, background: item.status === 'completed' ? GREEN : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, cursor: 'pointer', transition: 'all 0.15s' }}>
-              {item.status === 'completed' && <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>✓</span>}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, color: item.status === 'completed' ? MUTED : DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 500, textDecoration: item.status === 'completed' ? 'line-through' : 'none' }}>
-                {item.title}
-              </div>
-              {item.tips && (
-                <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginTop: 2, lineHeight: 1.4 }}>
-                  {item.tips}
-                </div>
-              )}
-            </div>
-            <span style={{ fontSize: 10, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 7px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, flexShrink: 0 }}>
-              Chat
-            </span>
+    <div ref={setNodeRef} style={style}>
+      <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px' }}>
+          {/* Drag handle */}
+          <div {...attributes} {...listeners} style={{ display: 'flex', flexDirection: 'column', gap: 3, cursor: 'grab', padding: '3px 2px', flexShrink: 0, marginTop: 2, opacity: 0.35 }}>
+            <div style={{ width: 14, height: 2, borderRadius: 2, background: DARK }} />
+            <div style={{ width: 14, height: 2, borderRadius: 2, background: DARK }} />
+            <div style={{ width: 14, height: 2, borderRadius: 2, background: DARK }} />
           </div>
+          {/* Checkbox */}
+          <div onClick={() => onToggle(item)}
+            style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${item.status === 'completed' ? GREEN : BORDER}`, background: item.status === 'completed' ? GREEN : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, cursor: 'pointer', transition: 'all 0.15s' }}>
+            {item.status === 'completed' && <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>✓</span>}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 14, color: item.status === 'completed' ? MUTED : DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 500, textDecoration: item.status === 'completed' ? 'line-through' : 'none' }}>
+              {item.title}
+            </div>
+            {item.tips && (
+              <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginTop: 2, lineHeight: 1.4 }}>
+                {item.tips}
+              </div>
+            )}
+          </div>
+          <span style={{ fontSize: 10, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 7px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, flexShrink: 0 }}>
+            Chat
+          </span>
         </div>
-      ))}
+      </div>
     </div>
   )
 }
@@ -226,6 +254,10 @@ function DashboardInner() {
   const [loading, setLoading] = useState(true)
   const [taskLoading, setTaskLoading] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  )
 
   useEffect(() => {
     const check = () => setIsMobile((window.screen?.width || 1440) <= 768)
@@ -282,7 +314,6 @@ function DashboardInner() {
       ])
       const tasksJson = await tasksRes.json()
       setTasks(tasksJson.tasks || [])
-
       if (chatRes.ok) {
         const chatJson = await chatRes.json()
         setChatTasks((chatJson.items || []).filter((i: ChecklistItem) => i.source === 'chat'))
@@ -318,6 +349,16 @@ function DashboardInner() {
     } catch (e) {
       setChatTasks(prev => prev.map(i => i.id === item.id ? { ...i, status: item.status } : i))
     }
+  }
+
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    setChatTasks(prev => {
+      const oldIndex = prev.findIndex(i => i.id === active.id)
+      const newIndex = prev.findIndex(i => i.id === over.id)
+      return arrayMove(prev, oldIndex, newIndex)
+    })
   }
 
   function handleLogout() {
@@ -525,10 +566,10 @@ function DashboardInner() {
                     </div>
                   )}
 
-                  {/* ── CHAT-ADDED TASKS SECTION ── */}
+                  {/* ── CHAT-ADDED TASKS — DRAGGABLE ── */}
                   {chatTasks.length > 0 && (
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                         <span style={{ fontSize: 18 }}>◎</span>
                         <span style={{ fontSize: 14, fontWeight: 700, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
                           Added by {guideName}
@@ -537,7 +578,18 @@ function DashboardInner() {
                           {chatTasks.filter(i => i.status === 'completed').length}/{chatTasks.length}
                         </span>
                       </div>
-                      <ChatTaskList items={chatTasks} onToggle={toggleChatTask} />
+                      <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>
+                        Drag to reorder
+                      </div>
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                        <SortableContext items={chatTasks.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {chatTasks.map(item => (
+                              <SortableChatTask key={item.id} item={item} onToggle={toggleChatTask} />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
                     </div>
                   )}
 
