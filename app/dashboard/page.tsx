@@ -207,10 +207,10 @@ function SortableChatTask({ item, onToggle }: { item: ChecklistItem, onToggle: (
       <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px' }}>
           {/* Drag handle */}
-          <div {...attributes} {...listeners} style={{ display: 'flex', flexDirection: 'column', gap: 3, cursor: 'grab', padding: '3px 2px', flexShrink: 0, marginTop: 2, opacity: 0.35 }}>
-            <div style={{ width: 14, height: 2, borderRadius: 2, background: DARK }} />
-            <div style={{ width: 14, height: 2, borderRadius: 2, background: DARK }} />
-            <div style={{ width: 14, height: 2, borderRadius: 2, background: DARK }} />
+          <div {...attributes} {...listeners} style={{ display: 'flex', flexDirection: 'column', gap: 3, cursor: 'grab', padding: '3px 4px', flexShrink: 0, marginTop: 2 }}>
+            <div style={{ width: 16, height: 2.5, borderRadius: 2, background: MUTED }} />
+            <div style={{ width: 16, height: 2.5, borderRadius: 2, background: MUTED }} />
+            <div style={{ width: 16, height: 2.5, borderRadius: 2, background: MUTED }} />
           </div>
           {/* Checkbox */}
           <div onClick={() => onToggle(item)}
