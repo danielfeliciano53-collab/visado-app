@@ -68,12 +68,13 @@ export default function OnboardingPage() {
   // Step 4
   const [guideChoice, setGuideChoice] = useState('')
   const [commStyle, setCommStyle] = useState('')
+  const [gdprConsent, setGdprConsent] = useState(false)
 
   function canProceed() {
     if (step === 1) return fullName.trim() && ageRange && originState.trim()
     if (step === 2) return visaType && familySituation
     if (step === 3) return workBackground && bureaucracyComfort && biggestConcern
-    if (step === 4) return guideChoice && commStyle
+    if (step === 4) return guideChoice && commStyle && gdprConsent
     return false
   }
 
@@ -96,6 +97,8 @@ export default function OnboardingPage() {
           guide_choice: guideChoice,
           comm_style: commStyle,
           onboarding_done: true,
+          gdpr_consent: true,
+          gdpr_consent_date: new Date().toISOString(),
         }),
       })
       if (!res.ok) {
@@ -312,6 +315,23 @@ export default function OnboardingPage() {
                     <OptionCard key={c.value} selected={commStyle === c.value} onClick={() => setCommStyle(c.value)}>{c.label}</OptionCard>
                   ))}
                 </div>
+              </div>
+
+              <div style={{ marginTop: 24, padding: '16px', background: '#F9F7F4', borderRadius: 10, border: `1px solid ${BORDER}` }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={gdprConsent}
+                    onChange={e => setGdprConsent(e.target.checked)}
+                    style={{ marginTop: 2, width: 16, height: 16, accentColor: GREEN_DARK, flexShrink: 0, cursor: 'pointer' }}
+                  />
+                  <span style={{ fontSize: 13, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", lineHeight: 1.6 }}>
+                    I understand that Visado uses AI to process my relocation questions and that my profile data is stored securely to personalize my experience. I have read and agree to the{' '}
+                    <a href="https://visadoapp.com/privacy" target="_blank" rel="noopener noreferrer" style={{ color: GREEN_DARK, fontWeight: 600 }}>Privacy Policy</a>
+                    {' '}and{' '}
+                    <a href="https://visadoapp.com/terms" target="_blank" rel="noopener noreferrer" style={{ color: GREEN_DARK, fontWeight: 600 }}>Terms of Service</a>.
+                  </span>
+                </label>
               </div>
             </div>
           )}
