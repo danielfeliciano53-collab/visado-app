@@ -9,6 +9,7 @@ import {
   DndContext,
   closestCenter,
   PointerSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -195,30 +196,73 @@ function TaskList({ tasks, onToggle }: { tasks: Task[], onToggle: (t: Task) => v
 }
 
 function SortableChatTask({ item, onToggle }: { item: ChecklistItem, onToggle: (item: ChecklistItem) => void }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id })
+
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : item.status === 'completed' ? 0.6 : 1,
+    position: 'relative' as const,
+    zIndex: isDragging ? 999 : 'auto' as any,
   }
 
   return (
     <div ref={setNodeRef} style={style}>
       <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '12px 14px' }}>
           {/* Drag handle */}
-          <div {...attributes} {...listeners} style={{ display: 'flex', flexDirection: 'column', gap: 3, cursor: 'grab', padding: '3px 4px', flexShrink: 0, marginTop: 2 }}>
-            <div style={{ width: 16, height: 2.5, borderRadius: 2, background: MUTED }} />
-            <div style={{ width: 16, height: 2.5, borderRadius: 2, background: MUTED }} />
-            <div style={{ width: 16, height: 2.5, borderRadius: 2, background: MUTED }} />
+          <div
+            {...attributes}
+            {...listeners}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              gap: 4,
+              cursor: 'grab',
+              padding: '4px 6px',
+              flexShrink: 0,
+              marginTop: 1,
+              borderRadius: 4,
+              background: '#F3F4F6',
+              border: '1px solid #E5E7EB',
+              minWidth: 24,
+              minHeight: 32,
+              alignItems: 'center',
+            }}
+          >
+            <div style={{ width: 12, height: 2, borderRadius: 1, background: '#9CA3AF' }} />
+            <div style={{ width: 12, height: 2, borderRadius: 1, background: '#9CA3AF' }} />
+            <div style={{ width: 12, height: 2, borderRadius: 1, background: '#9CA3AF' }} />
           </div>
           {/* Checkbox */}
-          <div onClick={() => onToggle(item)}
-            style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${item.status === 'completed' ? GREEN : BORDER}`, background: item.status === 'completed' ? GREEN : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, cursor: 'pointer', transition: 'all 0.15s' }}>
+          <div
+            onClick={() => onToggle(item)}
+            style={{
+              width: 20, height: 20, borderRadius: 6,
+              border: `2px solid ${item.status === 'completed' ? GREEN : BORDER}`,
+              background: item.status === 'completed' ? GREEN : '#fff',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, marginTop: 1, cursor: 'pointer', transition: 'all 0.15s',
+            }}
+          >
             {item.status === 'completed' && <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>✓</span>}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ fontSize: 14, color: item.status === 'completed' ? MUTED : DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 500, textDecoration: item.status === 'completed' ? 'line-through' : 'none' }}>
+            <div style={{
+              fontSize: 14,
+              color: item.status === 'completed' ? MUTED : DARK,
+              fontFamily: "'Helvetica Neue', sans-serif",
+              fontWeight: 500,
+              textDecoration: item.status === 'completed' ? 'line-through' : 'none',
+            }}>
               {item.title}
             </div>
             {item.tips && (
@@ -227,7 +271,11 @@ function SortableChatTask({ item, onToggle }: { item: ChecklistItem, onToggle: (
               </div>
             )}
           </div>
-          <span style={{ fontSize: 10, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 7px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, flexShrink: 0 }}>
+          <span style={{
+            fontSize: 10, background: GREEN_LIGHT, color: GREEN_DARK,
+            padding: '2px 7px', borderRadius: 99,
+            fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, flexShrink: 0,
+          }}>
             Chat
           </span>
         </div>
