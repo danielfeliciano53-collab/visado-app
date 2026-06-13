@@ -67,6 +67,16 @@ interface Task {
   phase?: string
 }
 
+interface ChecklistItem {
+  id: string
+  title: string
+  category: string
+  status: string
+  tips?: string
+  source: string
+  created_at: string
+}
+
 interface Project {
   id: string
   name: string
@@ -168,11 +178,40 @@ function TaskList({ tasks, onToggle }: { tasks: Task[], onToggle: (t: Task) => v
   )
 }
 
+function ChatTaskList({ items, onToggle }: { items: ChecklistItem[], onToggle: (item: ChecklistItem) => void }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      {items.map(item => (
+        <div key={item.id} style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden', opacity: item.status === 'completed' ? 0.6 : 1 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px' }}>
+            <div onClick={() => onToggle(item)}
+              style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${item.status === 'completed' ? GREEN : BORDER}`, background: item.status === 'completed' ? GREEN : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, cursor: 'pointer', transition: 'all 0.15s' }}>
+              {item.status === 'completed' && <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>✓</span>}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: 14, color: item.status === 'completed' ? MUTED : DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 500, textDecoration: item.status === 'completed' ? 'line-through' : 'none' }}>
+                {item.title}
+              </div>
+              {item.tips && (
+                <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginTop: 2, lineHeight: 1.4 }}>
+                  {item.tips}
+                </div>
+              )}
+            </div>
+            <span style={{ fontSize: 10, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 7px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, flexShrink: 0 }}>
+              Chat
+            </span>
+          </div>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function DashboardInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // Tab is local state — initialized from URL but controlled by clicks
   const [activeTab, setActiveTab] = useState<'overview' | 'checklist'>('overview')
 
   useEffect(() => {
@@ -182,6 +221,7 @@ function DashboardInner() {
 
   const [data, setData] = useState<DashboardData | null>(null)
   const [tasks, setTasks] = useState<Task[]>([])
+  const [chatTasks, setChatTasks] = useState<ChecklistItem[]>([])
   const [activeProject, setActiveProject] = useState<Project | null>(null)
   const [loading, setLoading] = useState(true)
   const [taskLoading, setTaskLoading] = useState(false)
@@ -236,9 +276,17 @@ function DashboardInner() {
   async function loadTasks(projectId: string) {
     setTaskLoading(true)
     try {
-      const res = await apiFetch(`/api/tasks?project_id=${projectId}`)
-      const json = await res.json()
-      setTasks(json.tasks || [])
+      const [tasksRes, chatRes] = await Promise.all([
+        apiFetch(`/api/tasks?project_id=${projectId}`),
+        apiFetch('/api/checklist'),
+      ])
+      const tasksJson = await tasksRes.json()
+      setTasks(tasksJson.tasks || [])
+
+      if (chatRes.ok) {
+        const chatJson = await chatRes.json()
+        setChatTasks((chatJson.items || []).filter((i: ChecklistItem) => i.source === 'chat'))
+      }
     } catch (e) {
       console.error('Tasks load error', e)
     } finally {
@@ -262,6 +310,16 @@ function DashboardInner() {
     }
   }
 
+  async function toggleChatTask(item: ChecklistItem) {
+    const newStatus = item.status === 'completed' ? 'pending' : 'completed'
+    setChatTasks(prev => prev.map(i => i.id === item.id ? { ...i, status: newStatus } : i))
+    try {
+      await apiFetch('/api/checklist', { method: 'PATCH', body: JSON.stringify({ id: item.id, status: newStatus }) })
+    } catch (e) {
+      setChatTasks(prev => prev.map(i => i.id === item.id ? { ...i, status: item.status } : i))
+    }
+  }
+
   function handleLogout() {
     deleteCookie('visado_token')
     deleteCookie('visado_user')
@@ -274,7 +332,6 @@ function DashboardInner() {
   const criticalTasks = pendingTasks.filter(t => t.priority === 1)
   const guideName = profile.guide_choice === 'andreia' ? 'Andreia' : 'Joao'
 
-  // Phase-aware computed values
   const currentPhase = tasks.length > 0 ? getCurrentPhase(tasks) : ''
   const currentPhaseNumber = currentPhase ? getPhaseNumber(currentPhase) : 0
   const currentPhaseEmoji = currentPhase ? (PHASE_EMOJI[currentPhase] || '📋') : ''
@@ -308,7 +365,6 @@ function DashboardInner() {
           </p>
         </div>
 
-        {/* Tabs — local state, no URL navigation */}
         <div style={{ padding: isMobile ? '20px 16px 0' : '24px 32px 0', display: 'flex', gap: 4, borderBottom: `1px solid ${BORDER}`, marginTop: 8 }}>
           {(['overview', 'checklist'] as const).map(tab => (
             <button key={tab} onClick={() => { setActiveTab(tab); router.replace(tab === 'checklist' ? '/dashboard?tab=checklist' : '/dashboard', { scroll: false }) }}
@@ -322,7 +378,7 @@ function DashboardInner() {
 
           {/* ── OVERVIEW TAB ── */}
           {activeTab === 'overview' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(4, 1fr)', gap: 12 }}>
                 {[
                   { label: 'Overall Progress', value: `${summary.overall_progress}%`, sub: 'across all projects', color: GREEN_DARK },
@@ -356,7 +412,7 @@ function DashboardInner() {
                         </div>
                       )}
                     </div>
-                    <ProgressRing progress={currentPhaseProgress} size={72} />
+                    <ProgressRing progress={currentPhaseProgress} size={80} />
                   </div>
 
                   <div style={{ background: GREEN_LIGHT, borderRadius: 99, height: 6, marginBottom: 20 }}>
@@ -382,7 +438,7 @@ function DashboardInner() {
                         ))}
                       </div>
                       <button onClick={() => setActiveTab('checklist')}
-                        style={{ background: 'none', border: 'none', padding: 0, marginTop: 12, fontSize: 13, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: 'pointer', textDecoration: 'none' }}>
+                        style={{ background: 'none', border: 'none', padding: 0, marginTop: 12, fontSize: 13, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: 'pointer' }}>
                         View full checklist →
                       </button>
                     </div>
@@ -461,13 +517,31 @@ function DashboardInner() {
                       </div>
                     )
                   })}
+
                   {tasks.filter(t => !t.phase).length > 0 && (
                     <div>
                       <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Other Tasks</div>
                       <TaskList tasks={tasks.filter(t => !t.phase)} onToggle={toggleTask} />
                     </div>
                   )}
-                  {tasks.length === 0 && (
+
+                  {/* ── CHAT-ADDED TASKS SECTION ── */}
+                  {chatTasks.length > 0 && (
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                        <span style={{ fontSize: 18 }}>◎</span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
+                          Added by {guideName}
+                        </span>
+                        <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
+                          {chatTasks.filter(i => i.status === 'completed').length}/{chatTasks.length}
+                        </span>
+                      </div>
+                      <ChatTaskList items={chatTasks} onToggle={toggleChatTask} />
+                    </div>
+                  )}
+
+                  {tasks.length === 0 && chatTasks.length === 0 && (
                     <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>No tasks yet.</div>
                   )}
                 </div>
