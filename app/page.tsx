@@ -1,9 +1,12 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import CookieBanner from '../components/CookieBanner'
 
-const GREEN = '#1D9E75'
-const GREEN_DARK = '#0F6E56'
-const GREEN_LIGHT = '#E1F5EE'
+const NAVY = '#1B2F6E'
+const NAVY_DARK = '#111E47'
+const NAVY_LIGHT = '#E8ECF7'
+const GOLD = '#C9942A'
+const GOLD_LIGHT = '#FBF3E2'
 const OFF_WHITE = '#F9F7F4'
 const DARK = '#111510'
 const MUTED = '#6B7280'
@@ -16,14 +19,14 @@ export default function HomePage() {
       {/* NAV */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, background: 'rgba(249,247,244,0.95)', borderBottom: `1px solid ${BORDER}`, zIndex: 100, padding: '0 24px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px', color: GREEN_DARK }}>
-            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: GREEN }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px', color: NAVY_DARK }}>
+            <Image src="/visado-logo.png" alt="Visado" width={28} height={28} style={{ borderRadius: 6 }} />
             Visado
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
               <a href="#how" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>How it works</a>
               <Link href="/pricing" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Pricing</Link>
-              <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: GREEN_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Log In</Link>
+              <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: NAVY_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Log In</Link>
             </div>
         </div>
       </nav>
@@ -32,18 +35,18 @@ export default function HomePage() {
       {/* HERO */}
       <section style={{ maxWidth: 1100, margin: '0 auto', padding: '60px 24px', display: 'flex', alignItems: 'center', gap: 60, flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 400px' }}>
-          <div style={{ display: 'inline-block', fontSize: 13, fontFamily: "'Helvetica Neue', sans-serif", color: GREEN_DARK, background: GREEN_LIGHT, padding: '4px 12px', borderRadius: 20, marginBottom: 24, border: `1px solid rgba(29,158,117,0.3)` }}>
+          <div style={{ display: 'inline-block', fontSize: 13, fontFamily: "'Helvetica Neue', sans-serif", color: NAVY_DARK, background: NAVY_LIGHT, padding: '4px 12px', borderRadius: 20, marginBottom: 24, border: `1px solid rgba(27,47,110,0.25)` }}>
             🇵🇹 Built by someone who did it
           </div>
           <h1 style={{ fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, lineHeight: 1.15, letterSpacing: '-1.5px', margin: '0 0 20px', color: DARK }}>
             Your move to Portugal,<br />
-            <span style={{ color: GREEN }}>without the chaos.</span>
+            <span style={{ color: GOLD }}>without the chaos.</span>
           </h1>
           <p style={{ fontSize: 18, lineHeight: 1.7, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", margin: '0 0 32px', maxWidth: 480 }}>
             Visado is an AI immigration guide built from real experience. Every document, every deadline, every bureaucratic curveball — organized, explained, and handled.
           </p>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
-            <Link href="/login" style={{ fontSize: 16, fontWeight: 600, color: '#fff', background: GREEN_DARK, padding: '14px 28px', borderRadius: 10, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", display: 'inline-block' }}>
+            <Link href="/login" style={{ fontSize: 16, fontWeight: 600, color: '#fff', background: NAVY_DARK, padding: '14px 28px', borderRadius: 10, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", display: 'inline-block' }}>
               Start your journey →
             </Link>
             <a href="#how" style={{ fontSize: 16, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", display: 'inline-flex', alignItems: 'center', padding: '14px 0' }}>
@@ -56,12 +59,12 @@ export default function HomePage() {
         {/* Hero card */}
         <div style={{ flex: '1 1 320px', background: '#fff', borderRadius: 16, padding: 24, boxShadow: '0 4px 40px rgba(0,0,0,0.08)', border: `1px solid ${BORDER}`, maxWidth: 420 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-            <div style={{ width: 36, height: 36, borderRadius: '50%', background: GREEN, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, fontFamily: "'Helvetica Neue', sans-serif", flexShrink: 0 }}>J</div>
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: NAVY, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 16, fontFamily: "'Helvetica Neue', sans-serif", flexShrink: 0 }}>J</div>
             <div>
               <div style={{ fontSize: 13, fontWeight: 600, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>Joao · Visado guide</div>
-              <div style={{ fontSize: 11, color: GREEN, fontFamily: "'Helvetica Neue', sans-serif" }}>● Online</div>
+              <div style={{ fontSize: 11, color: GOLD, fontFamily: "'Helvetica Neue', sans-serif" }}>● Online</div>
             </div>
-            <div style={{ marginLeft: 'auto', fontSize: 10, padding: '2px 8px', borderRadius: 20, background: GREEN_LIGHT, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Direct mode</div>
+            <div style={{ marginLeft: 'auto', fontSize: 10, padding: '2px 8px', borderRadius: 20, background: NAVY_LIGHT, color: NAVY_DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Direct mode</div>
           </div>
           <div style={{ fontSize: 14, lineHeight: 1.6, color: DARK, background: '#F9F9F9', padding: '12px 14px', borderRadius: 10, marginBottom: 14, fontFamily: "'Helvetica Neue', sans-serif" }}>
             Your NIF is the next critical step. Without it, you cannot open a Portuguese bank account, sign a lease, or submit your D7 application.
@@ -69,24 +72,24 @@ export default function HomePage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
             {['Valid passport', 'Proof of US address', 'Simple form at office'].map((item, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
-                <span style={{ color: GREEN, fontWeight: 700 }}>✓</span>{item}
+                <span style={{ color: GOLD, fontWeight: 700 }}>✓</span>{item}
               </div>
             ))}
           </div>
-          <div style={{ fontSize: 13, color: GREEN_DARK, fontStyle: 'italic', fontFamily: "'Helvetica Neue', sans-serif", borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
+          <div style={{ fontSize: 13, color: NAVY_DARK, fontStyle: 'italic', fontFamily: "'Helvetica Neue', sans-serif", borderTop: `1px solid ${BORDER}`, paddingTop: 12 }}>
             Want me to walk you through where to go?
           </div>
         </div>
       </section>
 
       {/* SOCIAL PROOF */}
-      <section style={{ background: GREEN_DARK, padding: '32px 24px' }}>
+      <section style={{ background: NAVY_DARK, padding: '32px 24px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', textAlign: 'center' }}>
           <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.6)', fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 20 }}>Trusted by Americans making the move</p>
           <div style={{ display: 'flex', gap: 48, flexWrap: 'wrap', justifyContent: 'center' }}>
             {[['D7 visa', 'flagship route'], ['32 steps', 'fully guided'], ['5 min', 'to get started'], ['AES-256', 'vault security']].map(([val, label], i) => (
               <div key={i} style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>{val}</div>
+                <div style={{ fontSize: 24, fontWeight: 700, color: GOLD, letterSpacing: '-0.5px' }}>{val}</div>
                 <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', fontFamily: "'Helvetica Neue', sans-serif", marginTop: 2 }}>{label}</div>
               </div>
             ))}
@@ -95,9 +98,9 @@ export default function HomePage() {
       </section>
 
       {/* HOW IT WORKS */}
-      <section style={{ padding: '60px 24px', background: '#fff' }}>
+      <section id="how" style={{ padding: '60px 24px', background: '#fff' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: GREEN, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>How it works</div>
+          <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>How it works</div>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 700, letterSpacing: '-1px', margin: '0 0 48px', color: DARK }}>From overwhelmed to on your way</h2>
           <div>
             {[
@@ -121,7 +124,7 @@ export default function HomePage() {
       {/* FEATURES */}
       <section style={{ padding: '60px 24px', background: OFF_WHITE }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
-          <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: GREEN, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>What's included</div>
+          <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>What's included</div>
           <h2 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 700, letterSpacing: '-1px', margin: '0 0 48px', color: DARK }}>Everything you need. Nothing you don't.</h2>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: 24 }}>
             {[
@@ -150,7 +153,7 @@ export default function HomePage() {
           <p style={{ fontSize: 17, lineHeight: 1.75, color: 'rgba(255,255,255,0.65)', fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 36 }}>
             Moving abroad at any age takes courage. Moving in your 50s, 60s, or 70s takes something more. Visado was built for people who have earned the right to make this choice — and who deserve a guide that understands what it means.
           </p>
-          <Link href="/login" style={{ display: 'inline-block', fontSize: 16, fontWeight: 600, color: GREEN_DARK, background: '#fff', padding: '15px 32px', borderRadius: 10, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>
+          <Link href="/login" style={{ display: 'inline-block', fontSize: 16, fontWeight: 600, color: NAVY_DARK, background: GOLD, padding: '15px 32px', borderRadius: 10, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>
             Talk to Andreia or Joao →
           </Link>
         </div>
@@ -159,8 +162,8 @@ export default function HomePage() {
       {/* FOOTER */}
       <footer style={{ background: OFF_WHITE, borderTop: `1px solid ${BORDER}`, padding: '40px 24px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 16, fontWeight: 700, color: GREEN_DARK, marginRight: 'auto' }}>
-            <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: GREEN }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 16, fontWeight: 700, color: NAVY_DARK, marginRight: 'auto' }}>
+            <Image src="/visado-logo.png" alt="Visado" width={20} height={20} style={{ borderRadius: 4 }} />
             Visado
           </div>
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
