@@ -75,8 +75,12 @@ export default function AdminPage() {
   async function loadStats() {
     setLoading(true)
     try {
-      const res = await apiFetch('/api/admin/stats')
-      if (res.status === 401) { router.push('/login'); return }
+      const adminToken = localStorage.getItem('visado_admin_token')
+      if (!adminToken) { router.push('/admin/login'); return }
+      const res = await fetch('https://visado-backend.vercel.app/api/admin/stats', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      })
+      if (res.status === 401) { router.push('/admin/login'); return }
       if (res.status === 403) { setError('Access denied — admin only.'); setLoading(false); return }
       if (!res.ok) { setError('Failed to load stats.'); setLoading(false); return }
       const json = await res.json()
@@ -89,9 +93,8 @@ export default function AdminPage() {
   }
 
   function handleLogout() {
-    deleteCookie('visado_token')
-    deleteCookie('visado_user')
-    router.push('/login')
+    localStorage.removeItem('visado_admin_token')
+    router.push('/admin/login')
   }
 
   if (loading) {
