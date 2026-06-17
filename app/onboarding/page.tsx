@@ -3,13 +3,14 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { apiFetch } from '../../lib/api'
 
-const GREEN = '#1D9E75'
-const GREEN_DARK = '#0F6E56'
-const GREEN_LIGHT = '#E1F5EE'
+const GREEN = '#1B2F6E'
+const GREEN_DARK = '#111E47'
+const GREEN_LIGHT = '#E8ECF7'
 const OFF_WHITE = '#F9F7F4'
 const DARK = '#111510'
 const MUTED = '#6B7280'
 const BORDER = '#E5E7EB'
+const GOLD = '#C9942A'
 
 const TOTAL_STEPS = 4
 
