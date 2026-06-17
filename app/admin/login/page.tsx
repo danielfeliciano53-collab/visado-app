@@ -24,7 +24,6 @@ export default function AdminLoginPage() {
       const res = await fetch(`${BACKEND_URL}/api/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
         body: JSON.stringify({ password }),
       })
       const data = await res.json()
@@ -33,6 +32,7 @@ export default function AdminLoginPage() {
         setLoading(false)
         return
       }
+      localStorage.setItem('visado_admin_token', data.token)
       router.push('/admin')
     } catch (e) {
       setError('Connection error. Please try again.')
