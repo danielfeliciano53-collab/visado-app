@@ -5,13 +5,14 @@ import { useSearchParams } from 'next/navigation'
 import Sidebar from '../../components/Sidebar'
 import { apiFetch, deleteCookie } from '../../lib/api'
 
-const GREEN = '#1D9E75'
-const GREEN_DARK = '#0F6E56'
-const GREEN_LIGHT = '#E1F5EE'
+const GREEN = '#1B2F6E'
+const GREEN_DARK = '#111E47'
+const GREEN_LIGHT = '#E8ECF7'
 const OFF_WHITE = '#F9F7F4'
 const DARK = '#111510'
 const MUTED = '#6B7280'
 const BORDER = '#E5E7EB'
+const GOLD = '#C9942A'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -113,7 +114,7 @@ function TaskConfirmCard({ tasks, isPro, guideName, onAllDismissed }: {
             display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between',
             gap: 10, marginBottom: i < tasks.length - 1 ? 8 : 0,
             paddingBottom: i < tasks.length - 1 ? 8 : 0,
-            borderBottom: i < tasks.length - 1 ? `1px solid rgba(29,158,117,0.2)` : 'none',
+            borderBottom: i < tasks.length - 1 ? `1px solid rgba(27,47,110,0.2)` : 'none',
           }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontSize: 13, fontWeight: 500, color: DARK, lineHeight: 1.4 }}>{task.title}</div>
@@ -149,7 +150,7 @@ function TaskConfirmCard({ tasks, isPro, guideName, onAllDismissed }: {
       })}
 
       {!isPro && (
-        <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid rgba(29,158,117,0.2)`, fontSize: 11, color: GREEN_DARK }}>
+        <div style={{ marginTop: 10, paddingTop: 10, borderTop: `1px solid rgba(27,47,110,0.2)`, fontSize: 11, color: GREEN_DARK }}>
           🌟 <strong>Pro tip:</strong> Upgrade to Pro and {guideName} will track tasks automatically.{' '}
           <a href="/account" style={{ color: GREEN_DARK, fontWeight: 600 }}>Upgrade →</a>
         </div>
