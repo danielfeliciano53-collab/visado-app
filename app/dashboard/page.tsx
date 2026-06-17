@@ -22,15 +22,16 @@ import {
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-const GREEN = '#1D9E75'
-const GREEN_DARK = '#0F6E56'
-const GREEN_LIGHT = '#E1F5EE'
+const GREEN = '#1B2F6E'
+const GREEN_DARK = '#111E47'
+const GREEN_LIGHT = '#E8ECF7'
 const OFF_WHITE = '#F9F7F4'
 const DARK = '#111510'
 const MUTED = '#6B7280'
 const BORDER = '#E5E7EB'
 const WARN = '#F59E0B'
 const DANGER = '#EF4444'
+const GOLD = '#C9942A'
 
 const PHASE_ORDER = [
   "Laying the Groundwork; Let's explore the journey",
@@ -271,7 +272,7 @@ function SortableChatTask({ item, onToggle }: { item: ChecklistItem, onToggle: (
             )}
           </div>
           <span style={{
-            fontSize: 10, background: GREEN_LIGHT, color: GREEN_DARK,
+            fontSize: 10, background: '#FBF3E2', color: GOLD,
             padding: '2px 7px', borderRadius: 99,
             fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, flexShrink: 0,
           }}>
