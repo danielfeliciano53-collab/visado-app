@@ -1,13 +1,18 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 const BACKEND_URL = 'https://visado-backend.vercel.app'
+
+const NAVY = '#1B2F6E'
+const NAVY_DARK = '#111E47'
+const GOLD = '#C9942A'
+const GOLD_LIGHT = '#FBF3E2'
 
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=604800; SameSite=Lax; Secure`
 }
-
 
 export default function LoginPage() {
   const router = useRouter()
@@ -104,14 +109,14 @@ export default function LoginPage() {
 
       {/* Left panel — hidden on mobile */}
       {!isMobile && (
-        <div style={{ flex: '1 1 480px', background: '#0F6E56', display: 'flex', flexDirection: 'column', padding: '48px', position: 'relative', overflow: 'hidden' }}>
+        <div style={{ flex: '1 1 480px', background: NAVY_DARK, display: 'flex', flexDirection: 'column', padding: '48px', position: 'relative', overflow: 'hidden' }}>
           {/* Background texture */}
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'radial-gradient(circle at 20% 80%, rgba(29,158,117,0.3) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(15,110,86,0.4) 0%, transparent 50%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: `radial-gradient(circle at 20% 80%, rgba(201,148,42,0.18) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(27,47,110,0.4) 0%, transparent 50%)`, pointerEvents: 'none' }} />
 
           {/* Logo */}
           <div style={{ position: 'relative', zIndex: 1 }}>
             <a href="https://visadoapp.com" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-              <span style={{ display: 'inline-block', width: 9, height: 9, borderRadius: '50%', background: '#9FE1CB' }} />
+              <Image src="/visado-logo.png" alt="Visado" width={32} height={32} style={{ borderRadius: 7 }} />
               <span style={{ fontSize: 22, fontWeight: 700, color: '#fff', letterSpacing: '-0.5px' }}>Visado</span>
             </a>
           </div>
@@ -129,14 +134,14 @@ export default function LoginPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 40 }}>
               {features.map((f, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 14, color: 'rgba(255,255,255,0.85)' }}>
-                  <span style={{ color: '#9FE1CB', fontWeight: 700, fontSize: 14 }}>✓</span>
+                  <span style={{ color: GOLD, fontWeight: 700, fontSize: 14 }}>✓</span>
                   {f}
                 </div>
               ))}
             </div>
 
             {/* Testimonial */}
-            <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: '20px 24px', borderLeft: '3px solid #9FE1CB' }}>
+            <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: '20px 24px', borderLeft: `3px solid ${GOLD}` }}>
               <p style={{ fontSize: 15, lineHeight: 1.6, color: 'rgba(255,255,255,0.85)', fontStyle: 'italic', margin: '0 0 10px' }}>
                 "I wish I'd had this when we moved. Would have saved us weeks of confusion."
               </p>
@@ -159,8 +164,8 @@ export default function LoginPage() {
           {isMobile && (
             <div style={{ textAlign: 'center', marginBottom: 32 }}>
               <a href="https://visadoapp.com" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, textDecoration: 'none' }}>
-                <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: '#1D9E75' }} />
-                <span style={{ fontSize: 22, fontWeight: 700, color: '#0F6E56' }}>Visado</span>
+                <Image src="/visado-logo.png" alt="Visado" width={28} height={28} style={{ borderRadius: 6 }} />
+                <span style={{ fontSize: 22, fontWeight: 700, color: NAVY_DARK }}>Visado</span>
               </a>
             </div>
           )}
@@ -229,7 +234,7 @@ export default function LoginPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                 <label style={{ fontSize: 13, fontWeight: 600, color: '#111510', fontFamily: "'Helvetica Neue', sans-serif" }}>Password</label>
                 {tab === 'login' && (
-                  <a href="/reset-password" style={{ fontSize: 12, color: '#0F6E56', textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Forgot password?</a>
+                  <a href="/reset-password" style={{ fontSize: 12, color: NAVY_DARK, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Forgot password?</a>
                 )}
               </div>
               <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
@@ -238,7 +243,7 @@ export default function LoginPage() {
                 style={{ width: '100%', padding: '11px 14px', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 15, color: '#111510', background: '#fff', fontFamily: "'Helvetica Neue', sans-serif", outline: 'none', boxSizing: 'border-box' as const }} />
             </div>
             <button type="submit" disabled={loading}
-              style={{ width: '100%', padding: '13px', background: '#0F6E56', color: '#fff', border: 'none', borderRadius: 10, fontSize: 16, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: "'Helvetica Neue', sans-serif", opacity: loading ? 0.7 : 1, marginBottom: 20 }}>
+              style={{ width: '100%', padding: '13px', background: NAVY_DARK, color: '#fff', border: 'none', borderRadius: 10, fontSize: 16, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: "'Helvetica Neue', sans-serif", opacity: loading ? 0.7 : 1, marginBottom: 20 }}>
               {loading ? 'Please wait...' : tab === 'login' ? 'Log in →' : 'Create account →'}
             </button>
           </form>
@@ -246,7 +251,7 @@ export default function LoginPage() {
           <p style={{ textAlign: 'center', fontSize: 14, color: '#6B7280', fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 16 }}>
             {tab === 'login' ? "Don't have an account? " : 'Already have an account? '}
             <button onClick={() => { setTab(tab === 'login' ? 'signup' : 'login'); setError(''); setSuccess('') }}
-              style={{ background: 'none', border: 'none', color: '#0F6E56', fontWeight: 600, fontSize: 14, cursor: 'pointer', padding: 0, fontFamily: "'Helvetica Neue', sans-serif" }}>
+              style={{ background: 'none', border: 'none', color: NAVY_DARK, fontWeight: 600, fontSize: 14, cursor: 'pointer', padding: 0, fontFamily: "'Helvetica Neue', sans-serif" }}>
               {tab === 'login' ? 'Sign up free' : 'Log in'}
             </button>
           </p>
