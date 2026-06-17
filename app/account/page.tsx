@@ -5,14 +5,15 @@ import Sidebar from '../../components/Sidebar'
 import MobileHeader from '../../components/MobileHeader'
 import { apiFetch, deleteCookie } from '../../lib/api'
 
-const GREEN = '#1D9E75'
-const GREEN_DARK = '#0F6E56'
-const GREEN_LIGHT = '#E1F5EE'
+const GREEN = '#1B2F6E'
+const GREEN_DARK = '#111E47'
+const GREEN_LIGHT = '#E8ECF7'
 const OFF_WHITE = '#F9F7F4'
 const DARK = '#111510'
 const MUTED = '#6B7280'
 const BORDER = '#E5E7EB'
 const DANGER = '#EF4444'
+const GOLD = '#C9942A'
 
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/4gM4gA2t94561v1cVMabK00'
 
