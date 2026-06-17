@@ -1,8 +1,11 @@
 import Link from 'next/link'
+import Image from 'next/image'
 
-const GREEN = '#1D9E75'
-const GREEN_DARK = '#0F6E56'
-const GREEN_LIGHT = '#E1F5EE'
+const NAVY = '#1B2F6E'
+const NAVY_DARK = '#111E47'
+const NAVY_LIGHT = '#E8ECF7'
+const GOLD = '#C9942A'
+const GOLD_LIGHT = '#FBF3E2'
 const OFF_WHITE = '#F9F7F4'
 const DARK = '#111510'
 const MUTED = '#6B7280'
@@ -15,11 +18,11 @@ export default function PricingPage() {
       {/* NAV */}
       <nav style={{ background: 'rgba(249,247,244,0.95)', borderBottom: `1px solid ${BORDER}`, padding: '0 24px' }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 20, fontWeight: 700, color: GREEN_DARK, textDecoration: 'none' }}>
-            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: GREEN }} />
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 20, fontWeight: 700, color: NAVY_DARK, textDecoration: 'none' }}>
+            <Image src="/visado-logo.png" alt="Visado" width={28} height={28} style={{ borderRadius: 6 }} />
             Visado
           </Link>
-          <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: GREEN_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>
+          <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: NAVY_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>
             Log In
           </Link>
         </div>
@@ -29,9 +32,9 @@ export default function PricingPage() {
       <section style={{ padding: '80px 24px' }}>
         <div style={{ maxWidth: 900, margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: 56 }}>
-            <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: GREEN, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>Pricing</div>
+            <div style={{ fontSize: 12, fontWeight: 600, letterSpacing: '0.1em', textTransform: 'uppercase', color: GOLD, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>Pricing</div>
             <h1 style={{ fontSize: 'clamp(28px, 4vw, 42px)', fontWeight: 700, letterSpacing: '-1px', margin: '0 0 16px', color: DARK }}>Start free. Upgrade when you're ready.</h1>
-            <p style={{ fontSize: 16, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", margin: 0 }}>Use code <strong style={{ color: GREEN_DARK }}>BETA2026</strong> for your first month free.</p>
+            <p style={{ fontSize: 16, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", margin: 0 }}>Use code <strong style={{ color: NAVY_DARK }}>BETA2026</strong> for your first month free.</p>
           </div>
 
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'flex-start', justifyContent: 'center' }}>
@@ -44,29 +47,29 @@ export default function PricingPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
                 {['D7 visa checklist', 'Document list', 'Country overview', 'Basic guidance'].map((f, i) => (
                   <div key={i} style={{ fontSize: 14, color: DARK, fontFamily: "'Helvetica Neue', sans-serif", display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: GREEN, fontWeight: 700 }}>✓</span>{f}
+                    <span style={{ color: GOLD, fontWeight: 700 }}>✓</span>{f}
                   </div>
                 ))}
               </div>
-              <Link href="/login" style={{ display: 'block', textAlign: 'center', padding: '13px', borderRadius: 10, border: `2px solid ${GREEN_DARK}`, color: GREEN_DARK, fontWeight: 600, fontSize: 15, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>
+              <Link href="/login" style={{ display: 'block', textAlign: 'center', padding: '13px', borderRadius: 10, border: `2px solid ${NAVY_DARK}`, color: NAVY_DARK, fontWeight: 600, fontSize: 15, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>
                 Get started free
               </Link>
             </div>
 
             {/* Pro */}
-            <div style={{ flex: '1 1 280px', maxWidth: 380, background: GREEN_DARK, borderRadius: 16, padding: 32, position: 'relative' }}>
-              <div style={{ position: 'absolute', top: -12, left: 32, fontSize: 11, fontWeight: 700, color: GREEN_DARK, background: '#9FE1CB', padding: '3px 10px', borderRadius: 20, fontFamily: "'Helvetica Neue', sans-serif" }}>Most popular</div>
+            <div style={{ flex: '1 1 280px', maxWidth: 380, background: NAVY_DARK, borderRadius: 16, padding: 32, position: 'relative' }}>
+              <div style={{ position: 'absolute', top: -12, left: 32, fontSize: 11, fontWeight: 700, color: NAVY_DARK, background: GOLD_LIGHT, padding: '3px 10px', borderRadius: 20, fontFamily: "'Helvetica Neue', sans-serif" }}>Most popular</div>
               <div style={{ fontSize: 14, fontWeight: 600, color: 'rgba(255,255,255,0.7)', fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 8 }}>Pro</div>
               <div style={{ fontSize: 48, fontWeight: 700, color: '#fff', letterSpacing: '-2px', marginBottom: 4 }}>$19<span style={{ fontSize: 18, fontWeight: 400, color: 'rgba(255,255,255,0.6)' }}>/mo</span></div>
               <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 24 }}>Everything you need</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 28 }}>
                 {['Everything in Free', 'Joao or Andreia AI guide', 'Secure document vault', 'Adaptive pacing + tone', 'Phase-by-phase journey', 'Weekly updated info', 'Priority support'].map((f, i) => (
-                  <div key={i} style={{ fontSize: 14, color: '#E1F5EE', fontFamily: "'Helvetica Neue', sans-serif", display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ color: '#9FE1CB', fontWeight: 700 }}>✓</span>{f}
+                  <div key={i} style={{ fontSize: 14, color: NAVY_LIGHT, fontFamily: "'Helvetica Neue', sans-serif", display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ color: GOLD, fontWeight: 700 }}>✓</span>{f}
                   </div>
                 ))}
               </div>
-              <Link href="/login" style={{ display: 'block', textAlign: 'center', padding: '13px', borderRadius: 10, background: '#fff', color: GREEN_DARK, fontWeight: 700, fontSize: 15, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>
+              <Link href="/login" style={{ display: 'block', textAlign: 'center', padding: '13px', borderRadius: 10, background: GOLD, color: NAVY_DARK, fontWeight: 700, fontSize: 15, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>
                 Start with Pro →
               </Link>
               <div style={{ textAlign: 'center', fontSize: 12, color: 'rgba(255,255,255,0.5)', fontFamily: "'Helvetica Neue', sans-serif", marginTop: 10 }}>Cancel anytime</div>
@@ -95,8 +98,8 @@ export default function PricingPage() {
       {/* FOOTER */}
       <footer style={{ borderTop: `1px solid ${BORDER}`, padding: '32px 24px', marginTop: 40 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 16, fontWeight: 700, color: GREEN_DARK, textDecoration: 'none' }}>
-            <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: GREEN }} />
+          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 16, fontWeight: 700, color: NAVY_DARK, textDecoration: 'none' }}>
+            <Image src="/visado-logo.png" alt="Visado" width={20} height={20} style={{ borderRadius: 4 }} />
             Visado
           </Link>
           <div style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>Not legal advice. For complex situations, consult an immigration attorney.</div>
