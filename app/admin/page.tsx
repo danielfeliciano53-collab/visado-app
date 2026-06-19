@@ -118,7 +118,15 @@ export default function AdminPage() {
     )
   }
 
-  const { kpis, visaBreakdown, recentUsers, recentSignups } = data!
+  if (!data) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: OFF_WHITE, fontFamily: "'Helvetica Neue', sans-serif", color: MUTED, fontSize: 13 }}>
+        Loading admin dashboard...
+      </div>
+    )
+  }
+
+  const { kpis, visaBreakdown, recentUsers, recentSignups } = data
 
   // User filtering
   const filteredUsers = recentUsers.filter(u => {
