@@ -1,9 +1,8 @@
-import type { Metadata } from 'next'
+'use client'
+import { useState, useEffect } from 'react'
+import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { notFound } from 'next/navigation'
-
-export const dynamic = 'force-dynamic'
 
 const NAVY_DARK = '#111E47'
 const GOLD = '#C9942A'
@@ -11,44 +10,53 @@ const OFF_WHITE = '#F9F7F4'
 const DARK = '#111510'
 const MUTED = '#6B7280'
 const BORDER = '#E5E7EB'
-
 const BACKEND_URL = 'https://visado-backend.vercel.app'
-
-async function getPost(slug: string) {
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/blog?slug=${encodeURIComponent(slug)}`, {
-      cache: 'no-store'
-    })
-    console.log('[blog/slug] fetch status:', res.status, 'slug:', slug)
-    if (!res.ok) {
-      console.log('[blog/slug] fetch failed:', res.status, res.statusText)
-      return null
-    }
-    const data = await res.json()
-    console.log('[blog/slug] post found:', !!data.post)
-    return data.post || null
-  } catch (e) {
-    console.error('[blog/slug] fetch error:', e)
-    return null
-  }
-}
-
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const post = await getPost(params.slug)
-  if (!post) return { title: 'Post Not Found | Visado' }
-  return {
-    title: `${post.title} | Visado Blog`,
-    description: post.excerpt || 'Read this post on the Visado blog.',
-  }
-}
 
 function formatDate(dateStr: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
-  const post = await getPost(params.slug)
-  if (!post) notFound()
+export default function BlogPostPage() {
+  const params = useParams()
+  const router = useRouter()
+  const slug = params?.slug as string
+  const [post, setPost] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+  const [notFound, setNotFound] = useState(false)
+
+  useEffect(() => {
+    if (!slug) return
+    fetch(`${BACKEND_URL}/api/blog?slug=${encodeURIComponent(slug)}`)
+      .then(res => {
+        if (!res.ok) { setNotFound(true); setLoading(false); return null }
+        return res.json()
+      })
+      .then(data => {
+        if (!data) return
+        if (!data.post) { setNotFound(true); setLoading(false); return }
+        setPost(data.post)
+        setLoading(false)
+      })
+      .catch(() => { setNotFound(true); setLoading(false) })
+  }, [slug])
+
+  if (loading) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: OFF_WHITE, fontFamily: "'Helvetica Neue', sans-serif", color: MUTED, fontSize: 14 }}>
+        Loading...
+      </div>
+    )
+  }
+
+  if (notFound) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: OFF_WHITE, fontFamily: "'Helvetica Neue', sans-serif" }}>
+        <div style={{ fontSize: 48, marginBottom: 16 }}>404</div>
+        <div style={{ fontSize: 16, color: MUTED, marginBottom: 24 }}>Post not found</div>
+        <Link href="/blog" style={{ color: GOLD, textDecoration: 'none', fontWeight: 600 }}>← Back to Blog</Link>
+      </div>
+    )
+  }
 
   return (
     <div style={{ fontFamily: 'Georgia, serif', background: OFF_WHITE, minHeight: '100vh' }}>
@@ -67,30 +75,24 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
         </div>
       </nav>
 
-      {/* Article */}
       <article style={{ maxWidth: 720, margin: '0 auto', padding: '56px 24px' }}>
 
-        {/* Back link */}
         <Link href="/blog" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", display: 'inline-block', marginBottom: 32 }}>
           ← Back to Blog
         </Link>
 
-        {/* Meta */}
         <div style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           {post.author} · {formatDate(post.published_at || post.created_at)}
         </div>
 
-        {/* Title */}
         <h1 style={{ margin: '0 0 24px', fontSize: 38, fontWeight: 700, color: DARK, lineHeight: 1.2 }}>{post.title}</h1>
 
-        {/* Excerpt */}
         {post.excerpt && (
           <p style={{ margin: '0 0 40px', fontSize: 19, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", lineHeight: 1.6, borderBottom: `1px solid ${BORDER}`, paddingBottom: 40 }}>
             {post.excerpt}
           </p>
         )}
 
-        {/* Content */}
         <div style={{ fontSize: 17, lineHeight: 1.85, color: DARK }}>
           {post.content.split('\n\n').map((paragraph: string, i: number) => (
             paragraph.startsWith('## ') ? (
@@ -102,14 +104,13 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
                 {paragraph.replace('# ', '')}
               </h1>
             ) : (
-              <p key={i} style={{ margin: '0 0 24px', fontFamily: paragraph.startsWith('"') ? 'Georgia, serif' : "'Helvetica Neue', sans-serif" }}>
+              <p key={i} style={{ margin: '0 0 24px', fontFamily: "'Helvetica Neue', sans-serif" }}>
                 {paragraph}
               </p>
             )
           ))}
         </div>
 
-        {/* CTA */}
         <div style={{ background: NAVY_DARK, borderRadius: 16, padding: '36px 32px', textAlign: 'center', marginTop: 56 }}>
           <h3 style={{ margin: '0 0 10px', fontSize: 22, fontWeight: 700, color: '#fff' }}>Ready to start your Portugal journey?</h3>
           <p style={{ margin: '0 0 24px', fontSize: 15, color: 'rgba(255,255,255,0.75)', fontFamily: "'Helvetica Neue', sans-serif" }}>
@@ -122,7 +123,6 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
 
       </article>
 
-      {/* Footer */}
       <footer style={{ borderTop: `1px solid ${BORDER}`, padding: '32px', textAlign: 'center', marginTop: 32 }}>
         <p style={{ margin: 0, fontSize: 13, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>
           © 2026 Visado · <Link href="/privacy" style={{ color: MUTED }}>Privacy</Link> · <Link href="/terms" style={{ color: MUTED }}>Terms</Link>
