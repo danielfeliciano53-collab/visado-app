@@ -3,7 +3,10 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Sidebar from '../../components/Sidebar'
 import MobileHeader from '../../components/MobileHeader'
+import VaultUnlock from '../../components/VaultUnlock'
 import { apiFetch, deleteCookie } from '../../lib/api'
+import { useVault } from '../../lib/vaultContext'
+import { encryptFile, decryptFile } from '../../lib/vaultCrypto'
 
 const GREEN = '#1B2F6E'
 const GREEN_DARK = '#111E47'
@@ -24,15 +27,24 @@ interface VaultDoc {
   mime_type: string | null
   status: 'empty' | 'uploaded' | 'sample'
   notes: string | null
+  expiry_date: string | null
+  issue_date: string | null
+  encrypted: boolean | null
 }
 
 interface Profile {
+  id?: string
   full_name?: string
   email?: string
   plan?: string
 }
 
-// Document categories with metadata
+interface MetadataForm {
+  expiry_date: string
+  issue_date: string
+  notes: string
+}
+
 const DOC_CATEGORIES = [
   {
     group: 'Identity',
@@ -95,8 +107,27 @@ function getFileIcon(mimeType: string | null): string {
   return '📄'
 }
 
+function formatDate(dateStr: string | null): string {
+  if (!dateStr) return ''
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function isExpiringSoon(dateStr: string | null): boolean {
+  if (!dateStr) return false
+  const expiry = new Date(dateStr)
+  const now = new Date()
+  const sixtyDays = 60 * 24 * 60 * 60 * 1000
+  return expiry.getTime() - now.getTime() < sixtyDays && expiry > now
+}
+
+function isExpired(dateStr: string | null): boolean {
+  if (!dateStr) return false
+  return new Date(dateStr) < new Date()
+}
+
 export default function VaultPage() {
   const router = useRouter()
+  const { isUnlocked, getKey, lock } = useVault()
   const [profile, setProfile] = useState<Profile>({})
   const [vaultDocs, setVaultDocs] = useState<VaultDoc[]>([])
   const [loading, setLoading] = useState(true)
@@ -104,6 +135,10 @@ export default function VaultPage() {
   const [isMobile, setIsMobile] = useState(false)
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null)
   const [filter, setFilter] = useState<'all' | 'uploaded' | 'missing'>('all')
+  const [isFirstTime, setIsFirstTime] = useState(false)
+  const [metadataTarget, setMetadataTarget] = useState<string | null>(null)
+  const [metadataForm, setMetadataForm] = useState<MetadataForm>({ expiry_date: '', issue_date: '', notes: '' })
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const [uploadTarget, setUploadTarget] = useState<string | null>(null)
 
@@ -125,7 +160,14 @@ export default function VaultPage() {
       ])
       if (profileRes.status === 401) { router.push('/login'); return }
       const profileData = await profileRes.json()
-      setProfile(profileData.profile || {})
+      const p = profileData.profile || {}
+      setProfile(p)
+
+      // Check if user has set up vault before
+      if (p.id) {
+        const initialized = localStorage.getItem(`vault_initialized_${p.id}`)
+        setIsFirstTime(!initialized)
+      }
 
       if (vaultRes.ok) {
         const vaultData = await vaultRes.json()
@@ -135,6 +177,13 @@ export default function VaultPage() {
       console.error('Vault load error', e)
     } finally {
       setLoading(false)
+    }
+  }
+
+  function handleVaultUnlocked() {
+    if (profile.id) {
+      localStorage.setItem(`vault_initialized_${profile.id}`, 'true')
+      setIsFirstTime(false)
     }
   }
 
@@ -151,12 +200,39 @@ export default function VaultPage() {
     const file = e.target.files?.[0]
     if (!file || !uploadTarget) return
     e.target.value = ''
+    // Store file and show metadata form before uploading
+    setPendingFile(file)
+    setMetadataTarget(uploadTarget)
+    setMetadataForm({ expiry_date: '', issue_date: '', notes: '' })
+  }
 
-    setUploading(uploadTarget)
+  async function handleConfirmUpload() {
+    if (!pendingFile || !metadataTarget) return
+    const key = getKey()
+    if (!key) return
+
+    setUploading(metadataTarget)
+    setMetadataTarget(null)
+
     try {
+      // Read file as ArrayBuffer
+      const fileBuffer = await pendingFile.arrayBuffer()
+
+      // Encrypt the file client-side
+      const encryptedBuffer = await encryptFile(key, fileBuffer)
+
+      // Create a Blob from the encrypted buffer
+      const encryptedBlob = new Blob([encryptedBuffer], { type: 'application/octet-stream' })
+      const encryptedFile = new File([encryptedBlob], pendingFile.name + '.enc', { type: 'application/octet-stream' })
+
       const formData = new FormData()
-      formData.append('file', file)
-      formData.append('document_type', uploadTarget)
+      formData.append('file', encryptedFile)
+      formData.append('document_type', metadataTarget)
+      formData.append('encrypted', 'true')
+      formData.append('original_mime_type', pendingFile.type)
+      if (metadataForm.expiry_date) formData.append('expiry_date', metadataForm.expiry_date)
+      if (metadataForm.issue_date) formData.append('issue_date', metadataForm.issue_date)
+      if (metadataForm.notes) formData.append('notes', metadataForm.notes)
 
       const token = document.cookie.match(/(?:^|; )visado_token=([^;]*)/)?.[1]
       const res = await fetch('https://visado-backend.vercel.app/api/vault/upload', {
@@ -177,6 +253,46 @@ export default function VaultPage() {
     } finally {
       setUploading(null)
       setUploadTarget(null)
+      setPendingFile(null)
+    }
+  }
+
+  async function handleDownload(docId: string, fileName: string, encrypted: boolean | null, mimeType: string | null) {
+    const key = getKey()
+    if (!key) return
+    try {
+      const res = await apiFetch(`/api/vault/download?id=${docId}`)
+      if (!res.ok) { alert('Download failed. Please try again.'); return }
+      const data = await res.json()
+
+      // Fetch the actual file bytes from the signed URL
+      const fileRes = await fetch(data.url)
+      const encryptedBuffer = await fileRes.arrayBuffer()
+
+      let finalBuffer: ArrayBuffer
+      let finalMime: string
+
+      if (encrypted) {
+        // Decrypt client-side
+        finalBuffer = await decryptFile(key, encryptedBuffer)
+        finalMime = mimeType || 'application/octet-stream'
+      } else {
+        // Legacy unencrypted document
+        finalBuffer = encryptedBuffer
+        finalMime = mimeType || 'application/octet-stream'
+      }
+
+      // Trigger download
+      const blob = new Blob([finalBuffer], { type: finalMime })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = fileName?.replace('.enc', '') || 'document'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) {
+      console.error('Download error', e)
+      alert('Download failed. Please try again.')
     }
   }
 
@@ -190,22 +306,8 @@ export default function VaultPage() {
     }
   }
 
-  async function handleDownload(docId: string, fileName: string) {
-    try {
-      const res = await apiFetch(`/api/vault/download?id=${docId}`)
-      if (res.ok) {
-        const data = await res.json()
-        window.open(data.url, '_blank')
-      } else {
-        alert('Download failed. Please try again.')
-      }
-    } catch (e) {
-      console.error('Download error', e)
-      alert('Download failed. Please try again.')
-    }
-  }
-
   function handleLogout() {
+    lock()
     deleteCookie('visado_token')
     deleteCookie('visado_user')
     router.push('/login')
@@ -232,11 +334,73 @@ export default function VaultPage() {
       {/* Hidden file input */}
       <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" style={{ display: 'none' }} onChange={handleFileChange} />
 
+      {/* Vault unlock modal — shown when vault is locked */}
+      {!isUnlocked && profile.id && (
+        <VaultUnlock
+          userId={profile.id}
+          isFirstTime={isFirstTime}
+          onUnlocked={handleVaultUnlocked}
+        />
+      )}
+
+      {/* Metadata + confirm upload modal */}
+      {metadataTarget && pendingFile && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(17,21,16,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 150, padding: 20 }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth: 460 }}>
+            <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 700, color: DARK, fontFamily: 'Georgia, serif' }}>
+              Add Document Details
+            </h3>
+            <p style={{ margin: '0 0 20px', fontSize: 13, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>
+              {pendingFile.name} · These details help Joao remind you of upcoming deadlines. The document itself will be encrypted before upload.
+            </p>
+
+            <div style={{ display: 'flex', gap: 12, marginBottom: 14 }}>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: DARK, marginBottom: 6, fontFamily: "'Helvetica Neue', sans-serif" }}>Issue Date (optional)</label>
+                <input type="date" value={metadataForm.issue_date} onChange={e => setMetadataForm({ ...metadataForm, issue_date: e.target.value })}
+                  style={{ width: '100%', padding: '10px 12px', border: `1.5px solid ${BORDER}`, borderRadius: 8, fontSize: 14, boxSizing: 'border-box', fontFamily: "'Helvetica Neue', sans-serif", outline: 'none' }} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: DARK, marginBottom: 6, fontFamily: "'Helvetica Neue', sans-serif" }}>Expiry Date (optional)</label>
+                <input type="date" value={metadataForm.expiry_date} onChange={e => setMetadataForm({ ...metadataForm, expiry_date: e.target.value })}
+                  style={{ width: '100%', padding: '10px 12px', border: `1.5px solid ${BORDER}`, borderRadius: 8, fontSize: 14, boxSizing: 'border-box', fontFamily: "'Helvetica Neue', sans-serif", outline: 'none' }} />
+              </div>
+            </div>
+
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: DARK, marginBottom: 6, fontFamily: "'Helvetica Neue', sans-serif" }}>Notes (optional)</label>
+            <textarea value={metadataForm.notes} onChange={e => setMetadataForm({ ...metadataForm, notes: e.target.value })}
+              placeholder="e.g. Renewed March 2024, expires March 2034"
+              rows={3}
+              style={{ width: '100%', padding: '10px 12px', border: `1.5px solid ${BORDER}`, borderRadius: 8, fontSize: 14, marginBottom: 20, boxSizing: 'border-box', fontFamily: "'Helvetica Neue', sans-serif", outline: 'none', resize: 'none' }} />
+
+            <div style={{ background: GREEN_LIGHT, borderRadius: 8, padding: '10px 14px', marginBottom: 20, fontSize: 12, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
+              🔒 This document will be encrypted in your browser before upload. Only you can decrypt it.
+            </div>
+
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => { setMetadataTarget(null); setPendingFile(null) }}
+                style={{ flex: 1, padding: '11px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 14, cursor: 'pointer', color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
+                Cancel
+              </button>
+              <button onClick={handleConfirmUpload}
+                style={{ flex: 2, padding: '11px', background: GREEN_DARK, color: '#fff', border: 'none', borderRadius: 8, fontSize: 14, cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
+                🔒 Encrypt & Upload
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div style={{ flex: 1, minWidth: 0, paddingTop: isMobile ? 56 : 0, overflowX: 'hidden' }}>
 
         {/* Page header */}
         <div style={{ padding: isMobile ? '24px 16px 0' : '32px 32px 0' }}>
-          <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 26, fontWeight: 700, color: DARK }}>Document Vault</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+            <h1 style={{ margin: 0, fontSize: isMobile ? 22 : 26, fontWeight: 700, color: DARK }}>Document Vault</h1>
+            <span style={{ fontSize: 12, background: GREEN_LIGHT, color: GREEN_DARK, padding: '3px 10px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
+              🔒 Encrypted
+            </span>
+          </div>
           <p style={{ margin: '6px 0 0', fontSize: 14, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>
             {uploadedCount} of {totalCount} documents uploaded
             {missingRequired > 0 && ` · ${missingRequired} required documents missing`}
@@ -282,20 +446,20 @@ export default function VaultPage() {
                     const isUploaded = existing?.status === 'uploaded'
                     const isUploadingThis = uploading === doc.type
                     const isExpanded = selectedDoc === doc.type
+                    const expiring = isExpiringSoon(existing?.expiry_date || null)
+                    const expired = isExpired(existing?.expiry_date || null)
 
                     return (
-                      <div key={doc.type} style={{ background: '#fff', border: `1px solid ${isUploaded ? GREEN_LIGHT : BORDER}`, borderRadius: 12, overflow: 'hidden' }}>
-                        {/* Main row */}
+                      <div key={doc.type} style={{ background: '#fff', border: `1px solid ${expired ? '#FCA5A5' : expiring ? '#FCD34D' : isUploaded ? GREEN_LIGHT : BORDER}`, borderRadius: 12, overflow: 'hidden' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', cursor: 'pointer' }}
                           onClick={() => setSelectedDoc(isExpanded ? null : doc.type)}>
 
-                          {/* Status indicator */}
                           <div style={{ width: 36, height: 36, borderRadius: 8, background: isUploaded ? GREEN_LIGHT : OFF_WHITE, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 18 }}>
                             {isUploaded ? getFileIcon(existing?.mime_type || null) : '📂'}
                           </div>
 
                           <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                               <div style={{ fontSize: 14, fontWeight: 600, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>{doc.label}</div>
                               {doc.required && !isUploaded && (
                                 <span style={{ fontSize: 10, background: '#FEE2E2', color: DANGER, padding: '2px 6px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Required</span>
@@ -303,10 +467,21 @@ export default function VaultPage() {
                               {isUploaded && (
                                 <span style={{ fontSize: 10, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 6px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>✓ Uploaded</span>
                               )}
+                              {isUploaded && existing?.encrypted && (
+                                <span style={{ fontSize: 10, background: '#F0FDF4', color: '#166534', padding: '2px 6px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>🔒 Encrypted</span>
+                              )}
+                              {expired && (
+                                <span style={{ fontSize: 10, background: '#FEF2F2', color: DANGER, padding: '2px 6px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>⚠️ Expired</span>
+                              )}
+                              {expiring && !expired && (
+                                <span style={{ fontSize: 10, background: '#FFFBEB', color: '#92400E', padding: '2px 6px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>⏳ Expiring soon</span>
+                              )}
                             </div>
                             {isUploaded && existing?.file_name ? (
                               <div style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginTop: 2 }}>
-                                {existing.file_name} {existing.file_size ? `· ${formatFileSize(existing.file_size)}` : ''}
+                                {existing.file_name.replace('.enc', '')}
+                                {existing.file_size ? ` · ${formatFileSize(existing.file_size)}` : ''}
+                                {existing.expiry_date ? ` · Expires ${formatDate(existing.expiry_date)}` : ''}
                               </div>
                             ) : (
                               <div style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginTop: 2 }}>
@@ -315,42 +490,43 @@ export default function VaultPage() {
                             )}
                           </div>
 
-                          {/* Action button */}
                           <div style={{ flexShrink: 0 }}>
                             {isUploadingThis ? (
-                              <div style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>Uploading...</div>
+                              <div style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>Encrypting...</div>
+                            ) : isUploaded ? (
+                              <span style={{ color: MUTED, fontSize: 12 }}>{isExpanded ? '▲' : '▼'}</span>
                             ) : (
                               <button
                                 onClick={e => { e.stopPropagation(); handleUploadClick(doc.type) }}
-                                style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid ${isUploaded ? BORDER : GREEN_DARK}`, background: isUploaded ? '#fff' : GREEN_DARK, color: isUploaded ? MUTED : '#fff', fontSize: 12, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: 'pointer' }}>
-                                {isUploaded ? 'Replace' : 'Upload'}
+                                style={{ fontSize: 12, padding: '7px 14px', background: GREEN_DARK, color: '#fff', border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
+                                Upload
                               </button>
                             )}
                           </div>
                         </div>
 
-                        {/* Expanded details */}
-                        {isExpanded && (
-                          <div style={{ padding: '0 16px 16px', borderTop: `1px solid ${BORDER}` }}>
-                            <p style={{ fontSize: 13, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", lineHeight: 1.6, margin: '12px 0' }}>
-                              {doc.description}
-                            </p>
-                            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                              {isUploaded && (
-                                <button
-                                  onClick={() => handleDownload(existing!.id, existing!.file_name || 'document')}
-                                  style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid ${GREEN_DARK}`, background: GREEN_LIGHT, color: GREEN_DARK, fontSize: 12, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: 'pointer' }}>
-                                  ⬇ Download / View
-                                </button>
-                              )}
-                              {isUploaded && (
-                                <button
-                                  onClick={() => handleDelete(existing!.id)}
-                                  style={{ padding: '7px 14px', borderRadius: 8, border: `1px solid #FCA5A5`, background: '#FEF2F2', color: DANGER, fontSize: 12, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: 'pointer' }}>
-                                  Delete
-                                </button>
-                              )}
-                            </div>
+                        {isExpanded && isUploaded && (
+                          <div style={{ borderTop: `1px solid ${BORDER}`, padding: '12px 16px', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                            {existing?.notes && (
+                              <div style={{ width: '100%', fontSize: 13, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 8 }}>
+                                {existing.notes}
+                              </div>
+                            )}
+                            <button
+                              onClick={() => handleDownload(existing!.id, existing?.file_name || 'document', existing?.encrypted || false, existing?.mime_type || null)}
+                              style={{ fontSize: 12, padding: '7px 14px', background: GREEN_LIGHT, color: GREEN_DARK, border: 'none', borderRadius: 8, cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
+                              ↓ Download
+                            </button>
+                            <button
+                              onClick={e => { e.stopPropagation(); handleUploadClick(doc.type) }}
+                              style={{ fontSize: 12, padding: '7px 14px', background: 'none', color: MUTED, border: `1px solid ${BORDER}`, borderRadius: 8, cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif" }}>
+                              Replace
+                            </button>
+                            <button
+                              onClick={() => handleDelete(existing!.id)}
+                              style={{ fontSize: 12, padding: '7px 14px', background: 'none', color: DANGER, border: '1px solid #FCA5A5', borderRadius: 8, cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif" }}>
+                              Delete
+                            </button>
                           </div>
                         )}
                       </div>
@@ -360,11 +536,6 @@ export default function VaultPage() {
               </div>
             )
           })}
-        </div>
-
-        {/* Upload note */}
-        <div style={{ padding: isMobile ? '0 16px 32px' : '0 32px 40px', fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", textAlign: 'center' }}>
-          Files are encrypted and stored securely. Max 10MB per file. Accepted: PDF, JPG, PNG.
         </div>
       </div>
     </div>

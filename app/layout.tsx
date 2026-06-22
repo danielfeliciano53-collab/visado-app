@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { VaultProvider } from '../lib/vaultContext'
 
 export const metadata: Metadata = {
   title: 'Visado',
@@ -17,7 +18,11 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <VaultProvider>
+          {children}
+        </VaultProvider>
+      </body>
     </html>
   )
 }
