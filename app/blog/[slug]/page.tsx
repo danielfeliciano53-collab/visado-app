@@ -3,6 +3,8 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { notFound } from 'next/navigation'
 
+export const dynamic = 'force-dynamic'
+
 const NAVY_DARK = '#111E47'
 const GOLD = '#C9942A'
 const OFF_WHITE = '#F9F7F4'
