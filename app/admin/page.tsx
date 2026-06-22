@@ -158,6 +158,9 @@ export default function AdminPage() {
           <a href="/admin/knowledge-base" style={{ fontSize: 13, color: GREEN_DARK, textDecoration: 'none', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 14px', fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
             📚 Knowledge Base
           </a>
+          <a href="/admin/blog" style={{ fontSize: 13, color: GREEN_DARK, textDecoration: 'none', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 14px', fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
+            ✍️ Blog
+          </a>
           <button onClick={loadStats} style={{ fontSize: 13, color: MUTED, background: 'none', border: `1px solid ${BORDER}`, borderRadius: 8, padding: '6px 14px', cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif" }}>
             ↻ Refresh
           </button>

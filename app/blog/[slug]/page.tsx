@@ -1,0 +1,126 @@
+import type { Metadata } from 'next'
+import Link from 'next/link'
+import Image from 'next/image'
+import { notFound } from 'next/navigation'
+
+const NAVY_DARK = '#111E47'
+const GOLD = '#C9942A'
+const OFF_WHITE = '#F9F7F4'
+const DARK = '#111510'
+const MUTED = '#6B7280'
+const BORDER = '#E5E7EB'
+
+const BACKEND_URL = 'https://visado-backend.vercel.app'
+
+async function getPost(slug: string) {
+  try {
+    const res = await fetch(`${BACKEND_URL}/api/blog?slug=${encodeURIComponent(slug)}`, {
+      next: { revalidate: 60 }
+    })
+    if (!res.ok) return null
+    const data = await res.json()
+    return data.post || null
+  } catch {
+    return null
+  }
+}
+
+export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
+  const post = await getPost(params.slug)
+  if (!post) return { title: 'Post Not Found | Visado' }
+  return {
+    title: `${post.title} | Visado Blog`,
+    description: post.excerpt || 'Read this post on the Visado blog.',
+  }
+}
+
+function formatDate(dateStr: string) {
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+}
+
+export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+  const post = await getPost(params.slug)
+  if (!post) notFound()
+
+  return (
+    <div style={{ fontFamily: 'Georgia, serif', background: OFF_WHITE, minHeight: '100vh' }}>
+
+      {/* Nav */}
+      <nav style={{ background: '#fff', borderBottom: `1px solid ${BORDER}`, padding: '0 32px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
+        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <Image src="/visado-logo.png" alt="Visado" width={28} height={28} style={{ borderRadius: 6 }} />
+          <span style={{ fontSize: 20, fontWeight: 700, color: NAVY_DARK }}>Visado</span>
+        </Link>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+          <Link href="/about" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>About</Link>
+          <Link href="/blog" style={{ fontSize: 14, color: NAVY_DARK, textDecoration: 'none', fontWeight: 600, fontFamily: "'Helvetica Neue', sans-serif" }}>Blog</Link>
+          <Link href="/pricing" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Pricing</Link>
+          <Link href="/login" style={{ fontSize: 14, background: NAVY_DARK, color: '#fff', padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Sign In</Link>
+        </div>
+      </nav>
+
+      {/* Article */}
+      <article style={{ maxWidth: 720, margin: '0 auto', padding: '56px 24px' }}>
+
+        {/* Back link */}
+        <Link href="/blog" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", display: 'inline-block', marginBottom: 32 }}>
+          ← Back to Blog
+        </Link>
+
+        {/* Meta */}
+        <div style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 14, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+          {post.author} · {formatDate(post.published_at || post.created_at)}
+        </div>
+
+        {/* Title */}
+        <h1 style={{ margin: '0 0 24px', fontSize: 38, fontWeight: 700, color: DARK, lineHeight: 1.2 }}>{post.title}</h1>
+
+        {/* Excerpt */}
+        {post.excerpt && (
+          <p style={{ margin: '0 0 40px', fontSize: 19, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", lineHeight: 1.6, borderBottom: `1px solid ${BORDER}`, paddingBottom: 40 }}>
+            {post.excerpt}
+          </p>
+        )}
+
+        {/* Content */}
+        <div style={{ fontSize: 17, lineHeight: 1.85, color: DARK }}>
+          {post.content.split('\n\n').map((paragraph: string, i: number) => (
+            paragraph.startsWith('## ') ? (
+              <h2 key={i} style={{ fontSize: 26, fontWeight: 700, color: DARK, margin: '40px 0 16px' }}>
+                {paragraph.replace('## ', '')}
+              </h2>
+            ) : paragraph.startsWith('# ') ? (
+              <h1 key={i} style={{ fontSize: 32, fontWeight: 700, color: DARK, margin: '40px 0 16px' }}>
+                {paragraph.replace('# ', '')}
+              </h1>
+            ) : (
+              <p key={i} style={{ margin: '0 0 24px', fontFamily: paragraph.startsWith('"') ? 'Georgia, serif' : "'Helvetica Neue', sans-serif" }}>
+                {paragraph}
+              </p>
+            )
+          ))}
+        </div>
+
+        {/* CTA */}
+        <div style={{ background: NAVY_DARK, borderRadius: 16, padding: '36px 32px', textAlign: 'center', marginTop: 56 }}>
+          <h3 style={{ margin: '0 0 10px', fontSize: 22, fontWeight: 700, color: '#fff' }}>Ready to start your Portugal journey?</h3>
+          <p style={{ margin: '0 0 24px', fontSize: 15, color: 'rgba(255,255,255,0.75)', fontFamily: "'Helvetica Neue', sans-serif" }}>
+            Meet Joao or Andreia — your AI guide, built on real experience.
+          </p>
+          <Link href="/login" style={{ display: 'inline-block', background: GOLD, color: '#fff', padding: '13px 28px', borderRadius: 8, fontSize: 15, fontWeight: 700, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>
+            Start for free →
+          </Link>
+        </div>
+
+      </article>
+
+      {/* Footer */}
+      <footer style={{ borderTop: `1px solid ${BORDER}`, padding: '32px', textAlign: 'center', marginTop: 32 }}>
+        <p style={{ margin: 0, fontSize: 13, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>
+          © 2026 Visado · <Link href="/privacy" style={{ color: MUTED }}>Privacy</Link> · <Link href="/terms" style={{ color: MUTED }}>Terms</Link>
+        </p>
+      </footer>
+
+    </div>
+  )
+}
