@@ -17,12 +17,18 @@ const BACKEND_URL = 'https://visado-backend.vercel.app'
 async function getPost(slug: string) {
   try {
     const res = await fetch(`${BACKEND_URL}/api/blog?slug=${encodeURIComponent(slug)}`, {
-      next: { revalidate: 60 }
+      cache: 'no-store'
     })
-    if (!res.ok) return null
+    console.log('[blog/slug] fetch status:', res.status, 'slug:', slug)
+    if (!res.ok) {
+      console.log('[blog/slug] fetch failed:', res.status, res.statusText)
+      return null
+    }
     const data = await res.json()
+    console.log('[blog/slug] post found:', !!data.post)
     return data.post || null
-  } catch {
+  } catch (e) {
+    console.error('[blog/slug] fetch error:', e)
     return null
   }
 }
