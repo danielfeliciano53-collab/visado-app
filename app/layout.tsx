@@ -5,6 +5,10 @@ import { VaultProvider } from '../lib/vaultContext'
 export const metadata: Metadata = {
   title: 'Visado',
   description: 'AI-powered relocation companion for Americans moving to Portugal',
+  icons: {
+    icon: '/visado-logo.png',
+    apple: '/apple-touch-icon.png',
+  },
 }
 
 export const viewport: Viewport = {
