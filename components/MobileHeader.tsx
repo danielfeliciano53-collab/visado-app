@@ -2,9 +2,9 @@
 import { useState } from 'react'
 import Link from 'next/link'
 
-const GREEN = '#1D9E75'
-const GREEN_DARK = '#0F6E56'
-const GREEN_LIGHT = '#E1F5EE'
+const GREEN = '#1B2F6E'
+const GREEN_DARK = '#111E47'
+const GREEN_LIGHT = '#E8ECF7'
 const MUTED = '#6B7280'
 const BORDER = '#E5E7EB'
 const DARK = '#111510'
@@ -34,7 +34,7 @@ export default function MobileHeader({ activePage, profile, onLogout }: MobileHe
     <>
       <div style={{ position: 'fixed', top: 0, left: 0, right: 0, height: 56, background: '#fff', borderBottom: `1px solid ${BORDER}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 16px', zIndex: 100 }}>
         <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18, fontWeight: 700, color: GREEN_DARK, textDecoration: 'none' }}>
-          <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: GREEN }} />
+          <img src="/visado-logo.png" alt="" width={22} height={22} style={{ borderRadius: 5 }} />
           Visado
         </Link>
         <button onClick={() => setOpen(!open)} style={{ background: 'none', border: 'none', fontSize: 22, color: DARK, cursor: 'pointer', padding: '4px 8px' }}>
@@ -45,7 +45,7 @@ export default function MobileHeader({ activePage, profile, onLogout }: MobileHe
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200 }} onClick={() => setOpen(false)}>
           <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 280, background: '#fff', display: 'flex', flexDirection: 'column', padding: '24px 0', overflowY: 'auto' }} onClick={e => e.stopPropagation()}>
             <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 18, fontWeight: 700, color: GREEN_DARK, textDecoration: 'none', padding: '0 20px', marginBottom: 32 }}>
-              <span style={{ display: 'inline-block', width: 7, height: 7, borderRadius: '50%', background: GREEN }} />
+              <img src="/visado-logo.png" alt="" width={22} height={22} style={{ borderRadius: 5 }} />
               Visado
             </Link>
             <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, padding: '0 12px' }}>
