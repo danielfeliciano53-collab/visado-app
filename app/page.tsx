@@ -18,17 +18,17 @@ export default function HomePage() {
 
       {/* NAV */}
       <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, background: 'rgba(249,247,244,0.95)', borderBottom: `1px solid ${BORDER}`, zIndex: 100, padding: '0 24px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px', color: NAVY_DARK }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, gap: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px', color: NAVY_DARK, flexShrink: 0 }}>
             <Image src="/visado-logo.png" alt="Visado" width={28} height={28} style={{ borderRadius: 6 }} />
             Visado
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-              <a href="#how" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>How it works</a>
-              <Link href="/about" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>About</Link>
-              <Link href="/blog" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Blog</Link>
-              <Link href="/pricing" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Pricing</Link>
-              <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: NAVY_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Log In</Link>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 18, overflowX: 'auto', minWidth: 0 }}>
+              <a href="#how" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>How it works</a>
+              <Link href="/about" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>About</Link>
+              <Link href="/blog" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>Blog</Link>
+              <Link href="/pricing" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>Pricing</Link>
+              <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: NAVY_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap', flexShrink: 0 }}>Log In</Link>
             </div>
         </div>
       </nav>
@@ -38,14 +38,14 @@ export default function HomePage() {
       <section style={{ maxWidth: 1100, margin: '0 auto', padding: '60px 24px', display: 'flex', alignItems: 'center', gap: 60, flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 400px' }}>
           <div style={{ display: 'inline-block', fontSize: 13, fontFamily: "'Helvetica Neue', sans-serif", color: NAVY_DARK, background: NAVY_LIGHT, padding: '4px 12px', borderRadius: 20, marginBottom: 24, border: `1px solid rgba(27,47,110,0.25)` }}>
-            🇵🇹 Built by someone who did it
+            🇵🇹 Built by a family who did it. Four times.
           </div>
           <h1 style={{ fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 700, lineHeight: 1.15, letterSpacing: '-1.5px', margin: '0 0 20px', color: DARK }}>
-            Your move to Portugal,<br />
-            <span style={{ color: GOLD }}>without the chaos.</span>
+            Portugal isn't just a move.<br />
+            <span style={{ color: GOLD }}>It's the beginning of something beautiful.</span>
           </h1>
           <p style={{ fontSize: 18, lineHeight: 1.7, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", margin: '0 0 32px', maxWidth: 480 }}>
-            Visado is an AI immigration guide built from real experience. Every document, every deadline, every bureaucratic curveball — organized, explained, and handled.
+            We've packed up our family and started over in the Netherlands, Malaysia, back to the US, and now the Algarve. Every time it was overwhelming, expensive, and lonely in ways we didn't expect. Visado is what we wished existed — not a lawyer, not a consultant. Just a calm, knowledgeable friend, available whenever the anxiety hits.
           </p>
           <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
             <Link href="/login" style={{ fontSize: 16, fontWeight: 600, color: '#fff', background: NAVY_DARK, padding: '14px 28px', borderRadius: 10, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", display: 'inline-block' }}>
