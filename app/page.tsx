@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import CookieBanner from '../components/CookieBanner'
+import LandingNav from '../components/LandingNav'
 
 const NAVY = '#1B2F6E'
 const NAVY_DARK = '#111E47'
@@ -17,21 +18,7 @@ export default function HomePage() {
     <div style={{ fontFamily: 'Georgia, serif', background: OFF_WHITE, color: DARK }}>
 
       {/* NAV */}
-      <nav style={{ position: 'fixed', top: 0, left: 0, right: 0, background: 'rgba(249,247,244,0.95)', borderBottom: `1px solid ${BORDER}`, zIndex: 100, padding: '0 24px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64, gap: 12 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 20, fontWeight: 700, letterSpacing: '-0.5px', color: NAVY_DARK, flexShrink: 0 }}>
-            <Image src="/visado-logo.png" alt="Visado" width={28} height={28} style={{ borderRadius: 6 }} />
-            Visado
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 18, overflowX: 'auto', minWidth: 0 }}>
-              <a href="#how" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>How it works</a>
-              <Link href="/about" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>About</Link>
-              <Link href="/blog" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>Blog</Link>
-              <Link href="/pricing" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>Pricing</Link>
-              <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: NAVY_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap', flexShrink: 0 }}>Log In</Link>
-            </div>
-        </div>
-      </nav>
+      <LandingNav />
       <div style={{ height: 64 }} />
 
       {/* HERO */}
