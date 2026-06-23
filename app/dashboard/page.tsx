@@ -133,22 +133,23 @@ const VISA_LABEL: Record<string, string> = {
   nhr: 'NHR Tax Status',
 }
 
-function ProgressRing({ progress, size = 80 }: { progress: number; size?: number }) {
+function ProgressRing({ progress, size = 72 }: { progress: number; size?: number }) {
   const r = (size - 8) / 2
   const circ = 2 * Math.PI * r
   const offset = circ - (progress / 100) * circ
   return (
-    <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={GREEN_LIGHT} strokeWidth={6} />
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={GREEN} strokeWidth={6}
-        strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
-        style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ display: 'block', flexShrink: 0 }}>
+      <g transform={`rotate(-90 ${size / 2} ${size / 2})`}>
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={GREEN_LIGHT} strokeWidth={6} />
+        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={GREEN} strokeWidth={6}
+          strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
+          style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
+      </g>
       <text
         x={size / 2} y={size / 2}
-        textAnchor="middle" dominantBaseline="middle"
-        fill={GREEN_DARK} fontSize={14} fontWeight={700}
+        textAnchor="middle" dominantBaseline="central"
+        fill={GREEN_DARK} fontSize={13} fontWeight={700}
         fontFamily="Helvetica Neue, sans-serif"
-        style={{ transform: 'rotate(90deg)', transformOrigin: `${size / 2}px ${size / 2}px` }}
       >
         {progress}%
       </text>
