@@ -23,10 +23,11 @@ interface BlogPost {
   published: boolean
   published_at: string | null
   created_at: string
+  image_url: string | null
 }
 
 function emptyForm() {
-  return { id: '', title: '', slug: '', excerpt: '', content: '', author: 'Daniel Feliciano', published: false }
+  return { id: '', title: '', slug: '', excerpt: '', content: '', author: 'Daniel Feliciano', published: false, image_url: '' }
 }
 
 function titleToSlug(title: string): string {
@@ -105,6 +106,7 @@ export default function AdminBlogPage() {
       content: post.content,
       author: post.author,
       published: post.published,
+      image_url: post.image_url || '',
     })
     setShowForm(true)
   }
@@ -134,6 +136,7 @@ export default function AdminBlogPage() {
         content: form.content.trim(),
         author: form.author.trim(),
         published: publish !== undefined ? publish : form.published,
+        image_url: form.image_url.trim() || null,
       }
       const res = await authedFetch('/api/blog', {
         method: isEdit ? 'PUT' : 'POST',
@@ -286,6 +289,16 @@ export default function AdminBlogPage() {
               placeholder="A short summary of the post — 1-2 sentences"
               rows={2}
               style={{ width: '100%', padding: '10px 12px', border: `1.5px solid ${BORDER}`, borderRadius: 8, fontSize: 14, marginBottom: 14, boxSizing: 'border-box', fontFamily: "'Helvetica Neue', sans-serif", outline: 'none', resize: 'none' }} />
+
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: DARK, marginBottom: 6, fontFamily: "'Helvetica Neue', sans-serif" }}>Featured image URL (optional)</label>
+            <input type="text" value={form.image_url} onChange={e => setForm({ ...form, image_url: e.target.value })}
+              placeholder="https://example.com/photo.jpg"
+              style={{ width: '100%', padding: '10px 12px', border: `1.5px solid ${BORDER}`, borderRadius: 8, fontSize: 13, marginBottom: 8, boxSizing: 'border-box', fontFamily: "'Helvetica Neue', sans-serif", outline: 'none' }} />
+            {form.image_url.trim() && (
+              <div style={{ marginBottom: 14 }}>
+                <img src={form.image_url} alt="Preview" style={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 8, border: `1px solid ${BORDER}` }} />
+              </div>
+            )}
 
             <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: DARK, marginBottom: 6, fontFamily: "'Helvetica Neue', sans-serif" }}>
               Content <span style={{ fontWeight: 400, color: MUTED }}>(use ## for headings, double line break for new paragraph)</span>
