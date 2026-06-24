@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import Image from 'next/image'
+import LandingNav from '../../components/LandingNav'
 
 const NAVY = '#1B2F6E'
 const NAVY_DARK = '#111E47'
@@ -15,18 +16,7 @@ export default function PricingPage() {
   return (
     <div style={{ minHeight: '100vh', background: OFF_WHITE, fontFamily: 'Georgia, serif' }}>
 
-      {/* NAV */}
-      <nav style={{ background: 'rgba(249,247,244,0.95)', borderBottom: `1px solid ${BORDER}`, padding: '0 24px' }}>
-        <div style={{ maxWidth: 1100, margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: 64 }}>
-          <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 20, fontWeight: 700, color: NAVY_DARK, textDecoration: 'none' }}>
-            <Image src="/visado-logo.png" alt="Visado" width={28} height={28} style={{ borderRadius: 6 }} />
-            Visado
-          </Link>
-          <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: NAVY_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>
-            Log In
-          </Link>
-        </div>
-      </nav>
+      <LandingNav />
 
       {/* PRICING */}
       <section style={{ padding: '80px 24px' }}>
