@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import LandingNav from '../../../components/LandingNav'
 
 const NAVY_DARK = '#111E47'
 const GOLD = '#C9942A'
@@ -61,19 +62,7 @@ export default function BlogPostPage() {
   return (
     <div style={{ fontFamily: 'Georgia, serif', background: OFF_WHITE, minHeight: '100vh' }}>
 
-      {/* Nav */}
-      <nav style={{ background: '#fff', borderBottom: `1px solid ${BORDER}`, padding: '0 32px', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, zIndex: 50 }}>
-        <Link href="/" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-          <Image src="/visado-logo.png" alt="Visado" width={28} height={28} style={{ borderRadius: 6 }} />
-          <span style={{ fontSize: 20, fontWeight: 700, color: NAVY_DARK }}>Visado</span>
-        </Link>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
-          <Link href="/about" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>About</Link>
-          <Link href="/blog" style={{ fontSize: 14, color: NAVY_DARK, textDecoration: 'none', fontWeight: 600, fontFamily: "'Helvetica Neue', sans-serif" }}>Blog</Link>
-          <Link href="/pricing" style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Pricing</Link>
-          <Link href="/login" style={{ fontSize: 14, background: NAVY_DARK, color: '#fff', padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Sign In</Link>
-        </div>
-      </nav>
+      <LandingNav />
 
       <article style={{ maxWidth: 720, margin: '0 auto', padding: '56px 24px' }}>
 
