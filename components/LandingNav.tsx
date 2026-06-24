@@ -13,7 +13,7 @@ export default function LandingNav() {
 
   const links = (
     <>
-      <a href="#how" onClick={() => setOpen(false)} style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>How it works</a>
+      <Link href="/#how" onClick={() => setOpen(false)} style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>How it works</Link>
       <Link href="/about" onClick={() => setOpen(false)} style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>About</Link>
       <Link href="/blog" onClick={() => setOpen(false)} style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>Blog</Link>
       <Link href="/pricing" onClick={() => setOpen(false)} style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>Pricing</Link>
