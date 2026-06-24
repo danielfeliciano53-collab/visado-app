@@ -47,6 +47,47 @@ export default function AdminBlogPage() {
   const [form, setForm] = useState(emptyForm())
   const [saving, setSaving] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
+
+  async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      setError('Please choose an image file.')
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setError('Image must be under 10MB.')
+      return
+    }
+    setUploadingImage(true)
+    setError('')
+    try {
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader()
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = () => reject(new Error('Could not read file'))
+        reader.readAsDataURL(file)
+      })
+      const token = getToken()
+      if (!token) { router.push('/admin/login'); return }
+      const res = await fetch(`${BACKEND_URL}/api/blog/upload-image`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ file_base64: base64, file_name: file.name, content_type: file.type }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) {
+        setError(data.error || 'Image upload failed.')
+        return
+      }
+      setForm(f => ({ ...f, image_url: data.url }))
+    } catch {
+      setError('Image upload failed.')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
 
   function getToken() {
     return typeof window !== 'undefined' ? localStorage.getItem('visado_admin_token') : null
@@ -290,9 +331,16 @@ export default function AdminBlogPage() {
               rows={2}
               style={{ width: '100%', padding: '10px 12px', border: `1.5px solid ${BORDER}`, borderRadius: 8, fontSize: 14, marginBottom: 14, boxSizing: 'border-box', fontFamily: "'Helvetica Neue', sans-serif", outline: 'none', resize: 'none' }} />
 
-            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: DARK, marginBottom: 6, fontFamily: "'Helvetica Neue', sans-serif" }}>Featured image URL (optional)</label>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: DARK, marginBottom: 6, fontFamily: "'Helvetica Neue', sans-serif" }}>Featured image (optional)</label>
+            <div style={{ marginBottom: 8 }}>
+              <label style={{ display: 'inline-block', padding: '9px 16px', background: uploadingImage ? '#E5E7EB' : NAVY_DARK, color: uploadingImage ? MUTED : '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, cursor: uploadingImage ? 'default' : 'pointer', fontFamily: "'Helvetica Neue', sans-serif" }}>
+                {uploadingImage ? 'Uploading…' : '⬆ Upload an image'}
+                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} style={{ display: 'none' }} />
+              </label>
+              <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginLeft: 10 }}>JPG, PNG, or WebP · max 10MB</span>
+            </div>
             <input type="text" value={form.image_url} onChange={e => setForm({ ...form, image_url: e.target.value })}
-              placeholder="https://example.com/photo.jpg"
+              placeholder="…or paste an image URL"
               style={{ width: '100%', padding: '10px 12px', border: `1.5px solid ${BORDER}`, borderRadius: 8, fontSize: 13, marginBottom: 8, boxSizing: 'border-box', fontFamily: "'Helvetica Neue', sans-serif", outline: 'none' }} />
             {form.image_url.trim() && (
               <div style={{ marginBottom: 14 }}>
