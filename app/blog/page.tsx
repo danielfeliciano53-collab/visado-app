@@ -63,7 +63,11 @@ export default async function BlogPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
             {posts.map((post: any) => (
               <Link key={post.id} href={`/blog/${post.slug}`} style={{ textDecoration: 'none' }}>
-                <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: '28px 32px', transition: 'border-color 0.15s', cursor: 'pointer' }}>
+                <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, overflow: 'hidden', transition: 'border-color 0.15s', cursor: 'pointer' }}>
+                  {post.image_url && (
+                    <img src={post.image_url} alt={post.title} style={{ width: '100%', height: 200, objectFit: 'cover', display: 'block' }} />
+                  )}
+                  <div style={{ padding: '28px 32px' }}>
                   <div style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
                     {post.author} · {formatDate(post.published_at || post.created_at)}
                   </div>
@@ -72,6 +76,7 @@ export default async function BlogPage() {
                     <p style={{ margin: '0 0 16px', fontSize: 15, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", lineHeight: 1.6 }}>{post.excerpt}</p>
                   )}
                   <span style={{ fontSize: 14, color: GOLD, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Read more →</span>
+                  </div>
                 </div>
               </Link>
             ))}

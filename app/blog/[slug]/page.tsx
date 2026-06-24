@@ -85,6 +85,9 @@ export default function BlogPostPage() {
           {post.author} · {formatDate(post.published_at || post.created_at)}
         </div>
 
+        {post.image_url && (
+          <img src={post.image_url} alt={post.title} style={{ width: '100%', maxHeight: 380, objectFit: 'cover', borderRadius: 12, marginBottom: 32, display: 'block' }} />
+        )}
         <h1 style={{ margin: '0 0 24px', fontSize: 38, fontWeight: 700, color: DARK, lineHeight: 1.2 }}>{post.title}</h1>
 
         {post.excerpt && (
