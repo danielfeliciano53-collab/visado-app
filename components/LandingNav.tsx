@@ -17,7 +17,6 @@ export default function LandingNav() {
       <Link href="/about" onClick={() => setOpen(false)} style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>About</Link>
       <Link href="/blog" onClick={() => setOpen(false)} style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>Blog</Link>
       <Link href="/pricing" onClick={() => setOpen(false)} style={{ fontSize: 14, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>Pricing</Link>
-      <Link href="/login" onClick={() => setOpen(false)} style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: NAVY_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>Log In</Link>
     </>
   )
 
@@ -32,17 +31,21 @@ export default function LandingNav() {
         {/* Desktop links */}
         <div className="landing-nav-desktop" style={{ alignItems: 'center', gap: 18 }}>
           {links}
+          <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: NAVY_DARK, padding: '8px 18px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>Log In</Link>
         </div>
 
-        {/* Mobile hamburger button */}
-        <button
-          className="landing-nav-burger"
-          onClick={() => setOpen(!open)}
-          aria-label="Menu"
-          style={{ background: 'none', border: 'none', fontSize: 24, color: NAVY_DARK, cursor: 'pointer', padding: 4, lineHeight: 1 }}
-        >
-          {open ? '✕' : '☰'}
-        </button>
+        {/* Mobile: standalone Log In + hamburger */}
+        <div className="landing-nav-mobile-actions" style={{ alignItems: 'center', gap: 12 }}>
+          <Link href="/login" style={{ fontSize: 14, fontWeight: 600, color: '#fff', background: NAVY_DARK, padding: '8px 16px', borderRadius: 8, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", whiteSpace: 'nowrap' }}>Log In</Link>
+          <button
+            className="landing-nav-burger"
+            onClick={() => setOpen(!open)}
+            aria-label="Menu"
+            style={{ background: 'none', border: 'none', fontSize: 24, color: NAVY_DARK, cursor: 'pointer', padding: 4, lineHeight: 1 }}
+          >
+            {open ? '✕' : '☰'}
+          </button>
+        </div>
       </div>
 
       {/* Mobile dropdown panel */}
@@ -54,10 +57,10 @@ export default function LandingNav() {
 
       <style>{`
         .landing-nav-desktop { display: none; }
-        .landing-nav-burger { display: block; }
+        .landing-nav-mobile-actions { display: flex; }
         @media (min-width: 768px) {
           .landing-nav-desktop { display: flex; }
-          .landing-nav-burger { display: none; }
+          .landing-nav-mobile-actions { display: none !important; }
           .landing-nav-mobile-panel { display: none !important; }
         }
       `}</style>
