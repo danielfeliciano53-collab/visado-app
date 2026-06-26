@@ -16,7 +16,6 @@ import {
 import {
   arrayMove,
   SortableContext,
-  sortableKeyboardCoordinates,
   useSortable,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
@@ -63,10 +62,10 @@ function getCurrentPhase(tasks: Task[]): string {
 function getChatUrl(phase: string, guideName: string): string {
   const messages: Record<string, string> = {
     "Laying the Groundwork; Let's explore the journey": `Hi, I'm just starting to think about moving to Portugal. Get to know me and help me figure out where to begin.`,
-    'Document Collection & Appointment Prep': `I'm in the Document Collection phase getting ready for my visa appointment. I've already determined my VFS or consulate location. What documents do I need to gather, what's the correct order to get them, and are there any long lead items I should start immediately?`,
-    'Moving to Portugal; What to expect and plan': `I've got my visa and I'm moving to Portugal. What should I expect and plan for in my first weeks? Walk me through the most important things to do when I arrive.`,
-    'Becoming a Resident; AIMA appointment & residency card': `I'm working on becoming a resident and need to tackle my AIMA appointment. What do I need to know, what documents do I bring, and what should I expect on the day?`,
-    "Building Your Life; Cars, medical, insurance & daily life": `I'm in the Building Your Life phase. Help me understand what I need to do for cars, medical registration, insurance, and everything else to live normally in Portugal.`,
+    'Document Collection & Appointment Prep': `I'm in the Document Collection phase getting ready for my visa appointment. What documents do I need to gather?`,
+    'Moving to Portugal; What to expect and plan': `I've got my visa and I'm moving to Portugal. What should I expect and plan for in my first weeks?`,
+    'Becoming a Resident; AIMA appointment & residency card': `I'm working on becoming a resident and need to tackle my AIMA appointment. What do I need to know?`,
+    "Building Your Life; Cars, medical, insurance & daily life": `I'm in the Building Your Life phase. Help me understand what I need to do for cars, medical registration, and daily life.`,
   }
   const msg = encodeURIComponent(messages[phase] || `Tell me about the ${phase} phase of my Portugal journey.`)
   return `/chat?message=${msg}`
@@ -145,67 +144,81 @@ function ProgressRing({ progress, size = 72 }: { progress: number; size?: number
           strokeDasharray={circ} strokeDashoffset={offset} strokeLinecap="round"
           style={{ transition: 'stroke-dashoffset 0.6s ease' }} />
       </g>
-      <text
-        x={size / 2} y={size / 2}
-        textAnchor="middle" dominantBaseline="central"
-        fill={GREEN_DARK} fontSize={13} fontWeight={700}
-        fontFamily="Helvetica Neue, sans-serif"
-      >
+      <text x={size / 2} y={size / 2} textAnchor="middle" dominantBaseline="central"
+        fill={GREEN_DARK} fontSize={13} fontWeight={700} fontFamily="Helvetica Neue, sans-serif">
         {progress}%
       </text>
     </svg>
   )
 }
 
-function TaskList({ tasks, onToggle }: { tasks: Task[], onToggle: (t: Task) => void }) {
-  const [expanded, setExpanded] = useState<string | null>(null)
+function SortableTask({ task, onToggle, onDelete, isCustomProject }: {
+  task: Task
+  onToggle: (t: Task) => void
+  onDelete: (t: Task) => void
+  isCustomProject: boolean
+}) {
+  const [expanded, setExpanded] = useState(false)
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id })
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : task.status === 'completed' ? 0.6 : 1,
+    position: 'relative' as const,
+    zIndex: isDragging ? 999 : 'auto' as any,
+  }
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {tasks.map(task => (
-        <div key={task.id} style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden', opacity: task.status === 'completed' ? 0.6 : 1 }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', cursor: 'pointer' }}
-            onClick={() => setExpanded(expanded === task.id ? null : task.id)}>
-            <div onClick={e => { e.stopPropagation(); onToggle(task) }}
-              style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${task.status === 'completed' ? GREEN : BORDER}`, background: task.status === 'completed' ? GREEN : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1, cursor: 'pointer', transition: 'all 0.15s' }}>
-              {task.status === 'completed' && <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>✓</span>}
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: 14, color: task.status === 'completed' ? MUTED : DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 500, textDecoration: task.status === 'completed' ? 'line-through' : 'none' }}>
-                {task.title}
-              </div>
-              {task.due_date && task.status !== 'completed' && (
-                <div style={{ fontSize: 11, color: new Date(task.due_date) < new Date() ? DANGER : MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginTop: 2 }}>
-                  Due {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                </div>
-              )}
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-              {task.priority === 1 && <span style={{ fontSize: 10, background: '#FEE2E2', color: DANGER, padding: '2px 7px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Critical</span>}
-              {task.priority === 2 && <span style={{ fontSize: 10, background: '#FEF3C7', color: WARN, padding: '2px 7px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>High</span>}
-              <span style={{ color: MUTED, fontSize: 12 }}>{expanded === task.id ? '▲' : '▼'}</span>
-            </div>
+    <div ref={setNodeRef} style={style}>
+      <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '12px 14px' }}>
+          <div {...attributes} {...listeners} style={{
+            display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 3,
+            cursor: 'grab', padding: '4px 5px', flexShrink: 0, marginTop: 1,
+            borderRadius: 4, background: '#F3F4F6', border: '1px solid #E5E7EB',
+            minWidth: 22, minHeight: 28, alignItems: 'center',
+          }}>
+            <div style={{ width: 10, height: 2, borderRadius: 1, background: '#9CA3AF' }} />
+            <div style={{ width: 10, height: 2, borderRadius: 1, background: '#9CA3AF' }} />
+            <div style={{ width: 10, height: 2, borderRadius: 1, background: '#9CA3AF' }} />
           </div>
-          {expanded === task.id && task.description && (
-            <div style={{ padding: '10px 14px 14px 46px', fontSize: 13, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", lineHeight: 1.6, borderTop: `1px solid ${BORDER}` }}>
-              {task.description}
+          <div onClick={e => { e.stopPropagation(); onToggle(task) }} style={{
+            width: 20, height: 20, borderRadius: 6,
+            border: `2px solid ${task.status === 'completed' ? GREEN : BORDER}`,
+            background: task.status === 'completed' ? GREEN : '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, marginTop: 1, cursor: 'pointer', transition: 'all 0.15s',
+          }}>
+            {task.status === 'completed' && <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>✓</span>}
+          </div>
+          <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={() => setExpanded(!expanded)}>
+            <div style={{ fontSize: 14, color: task.status === 'completed' ? MUTED : DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 500, textDecoration: task.status === 'completed' ? 'line-through' : 'none' }}>
+              {task.title}
             </div>
-          )}
+            {task.due_date && task.status !== 'completed' && (
+              <div style={{ fontSize: 11, color: new Date(task.due_date) < new Date() ? DANGER : MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginTop: 2 }}>
+                Due {new Date(task.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            {task.priority === 1 && <span style={{ fontSize: 10, background: '#FEE2E2', color: DANGER, padding: '2px 7px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Critical</span>}
+            {task.priority === 2 && <span style={{ fontSize: 10, background: '#FEF3C7', color: WARN, padding: '2px 7px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>High</span>}
+            <span onClick={() => setExpanded(!expanded)} style={{ color: MUTED, fontSize: 12, cursor: 'pointer' }}>{expanded ? '▲' : '▼'}</span>
+            <span onClick={() => onDelete(task)} style={{ color: '#D1D5DB', fontSize: 14, cursor: 'pointer', fontWeight: 700, lineHeight: 1 }} title="Delete task">×</span>
+          </div>
         </div>
-      ))}
+        {expanded && task.description && (
+          <div style={{ padding: '10px 14px 14px 46px', fontSize: 13, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", lineHeight: 1.6, borderTop: `1px solid ${BORDER}` }}>
+            {task.description}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
 
 function SortableChatTask({ item, onToggle }: { item: ChecklistItem, onToggle: (item: ChecklistItem) => void }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id })
-
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id })
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
@@ -213,72 +226,230 @@ function SortableChatTask({ item, onToggle }: { item: ChecklistItem, onToggle: (
     position: 'relative' as const,
     zIndex: isDragging ? 999 : 'auto' as any,
   }
-
   return (
     <div ref={setNodeRef} style={style}>
       <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 10, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, padding: '12px 14px' }}>
-          {/* Drag handle */}
-          <div
-            {...attributes}
-            {...listeners}
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              gap: 4,
-              cursor: 'grab',
-              padding: '4px 6px',
-              flexShrink: 0,
-              marginTop: 1,
-              borderRadius: 4,
-              background: '#F3F4F6',
-              border: '1px solid #E5E7EB',
-              minWidth: 24,
-              minHeight: 32,
-              alignItems: 'center',
-            }}
-          >
+          <div {...attributes} {...listeners} style={{
+            display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 4,
+            cursor: 'grab', padding: '4px 6px', flexShrink: 0, marginTop: 1,
+            borderRadius: 4, background: '#F3F4F6', border: '1px solid #E5E7EB',
+            minWidth: 24, minHeight: 32, alignItems: 'center',
+          }}>
             <div style={{ width: 12, height: 2, borderRadius: 1, background: '#9CA3AF' }} />
             <div style={{ width: 12, height: 2, borderRadius: 1, background: '#9CA3AF' }} />
             <div style={{ width: 12, height: 2, borderRadius: 1, background: '#9CA3AF' }} />
           </div>
-          {/* Checkbox */}
-          <div
-            onClick={() => onToggle(item)}
-            style={{
-              width: 20, height: 20, borderRadius: 6,
-              border: `2px solid ${item.status === 'completed' ? GREEN : BORDER}`,
-              background: item.status === 'completed' ? GREEN : '#fff',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0, marginTop: 1, cursor: 'pointer', transition: 'all 0.15s',
-            }}
-          >
+          <div onClick={() => onToggle(item)} style={{
+            width: 20, height: 20, borderRadius: 6,
+            border: `2px solid ${item.status === 'completed' ? GREEN : BORDER}`,
+            background: item.status === 'completed' ? GREEN : '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexShrink: 0, marginTop: 1, cursor: 'pointer', transition: 'all 0.15s',
+          }}>
             {item.status === 'completed' && <span style={{ color: '#fff', fontSize: 11, fontWeight: 700 }}>✓</span>}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{
-              fontSize: 14,
-              color: item.status === 'completed' ? MUTED : DARK,
-              fontFamily: "'Helvetica Neue', sans-serif",
-              fontWeight: 500,
-              textDecoration: item.status === 'completed' ? 'line-through' : 'none',
-            }}>
+            <div style={{ fontSize: 14, color: item.status === 'completed' ? MUTED : DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 500, textDecoration: item.status === 'completed' ? 'line-through' : 'none' }}>
               {item.title}
             </div>
             {item.tips && (
-              <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginTop: 2, lineHeight: 1.4 }}>
-                {item.tips}
-              </div>
+              <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginTop: 2, lineHeight: 1.4 }}>{item.tips}</div>
             )}
           </div>
-          <span style={{
-            fontSize: 10, background: '#FBF3E2', color: GOLD,
-            padding: '2px 7px', borderRadius: 99,
-            fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, flexShrink: 0,
-          }}>
-            Chat
-          </span>
+          <span style={{ fontSize: 10, background: '#FBF3E2', color: GOLD, padding: '2px 7px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, flexShrink: 0 }}>Chat</span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AddTaskModal({ onClose, onAdd, phases }: {
+  onClose: () => void
+  onAdd: (title: string, description: string, phase: string | null, priority: number) => void
+  phases: string[]
+}) {
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [phase, setPhase] = useState<string>('')
+  const [priority, setPriority] = useState(3)
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+        <h3 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>Add a Task</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", display: 'block', marginBottom: 6 }}>Task title *</label>
+            <input value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Get FBI background check apostilled"
+              style={{ width: '100%', padding: '10px 12px', border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", boxSizing: 'border-box', outline: 'none' }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", display: 'block', marginBottom: 6 }}>Description (optional)</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Any helpful notes about this task..."
+              rows={3} style={{ width: '100%', padding: '10px 12px', border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", boxSizing: 'border-box', resize: 'vertical', outline: 'none' }} />
+          </div>
+          {phases.length > 0 && (
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", display: 'block', marginBottom: 6 }}>Phase (optional)</label>
+              <select value={phase} onChange={e => setPhase(e.target.value)}
+                style={{ width: '100%', padding: '10px 12px', border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", boxSizing: 'border-box', outline: 'none', background: '#fff' }}>
+                <option value="">No phase</option>
+                {phases.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+          )}
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", display: 'block', marginBottom: 6 }}>Priority</label>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {[{ v: 1, label: 'Critical', bg: '#FEE2E2', color: DANGER }, { v: 2, label: 'High', bg: '#FEF3C7', color: WARN }, { v: 3, label: 'Normal', bg: GREEN_LIGHT, color: GREEN_DARK }].map(p => (
+                <button key={p.v} onClick={() => setPriority(p.v)}
+                  style={{ flex: 1, padding: '7px 0', borderRadius: 8, border: `2px solid ${priority === p.v ? p.color : BORDER}`, background: priority === p.v ? p.bg : '#fff', color: priority === p.v ? p.color : MUTED, fontSize: 12, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: 'pointer' }}>
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 10, marginTop: 24 }}>
+          <button onClick={onClose} style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: `1px solid ${BORDER}`, background: '#fff', color: MUTED, fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", cursor: 'pointer' }}>Cancel</button>
+          <button onClick={() => { if (title.trim()) { onAdd(title.trim(), description.trim(), phase || null, priority); onClose() } }}
+            style={{ flex: 2, padding: '11px 0', borderRadius: 10, border: 'none', background: title.trim() ? GREEN_DARK : BORDER, color: title.trim() ? '#fff' : MUTED, fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: title.trim() ? 'pointer' : 'default' }}>
+            Add Task
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AddProjectModal({ onClose, onCreate, plan, guideName }: {
+  onClose: () => void
+  onCreate: (name: string, description: string, tasks: any[] | null) => void
+  plan: string
+  guideName: string
+}) {
+  const [name, setName] = useState('')
+  const [description, setDescription] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [joaoTasks, setJoaoTasks] = useState<any[] | null>(null)
+  const [showPaywall, setShowPaywall] = useState(false)
+  const router = useRouter()
+
+  async function askJoao() {
+    if (!name.trim()) return
+    setLoading(true)
+    try {
+      const res = await apiFetch('/api/joao-project', {
+        method: 'POST',
+        body: JSON.stringify({ project_name: name.trim(), project_description: description.trim() })
+      })
+      const json = await res.json()
+      setJoaoTasks(json.tasks || [])
+    } catch (e) {
+      console.error(e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (showPaywall) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+        <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', textAlign: 'center' }}>
+          <div style={{ fontSize: 36, marginBottom: 12 }}>✨</div>
+          <h3 style={{ margin: '0 0 10px', fontSize: 20, fontWeight: 700, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>Upgrade to Pro</h3>
+          <p style={{ margin: '0 0 20px', fontSize: 14, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", lineHeight: 1.6 }}>
+            {guideName} built your project list. Upgrade to Pro to save it to your journey and start tracking progress.
+          </p>
+          <div style={{ background: GREEN_LIGHT, borderRadius: 12, padding: 16, marginBottom: 20, textAlign: 'left' }}>
+            {joaoTasks?.slice(0, 4).map((t, i) => (
+              <div key={i} style={{ fontSize: 13, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", padding: '4px 0', display: 'flex', gap: 8 }}>
+                <span>•</span><span>{t.title}</span>
+              </div>
+            ))}
+            {joaoTasks && joaoTasks.length > 4 && <div style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginTop: 4 }}>+ {joaoTasks.length - 4} more tasks</div>}
+          </div>
+          <button onClick={() => router.push('/account')}
+            style={{ width: '100%', padding: '13px 0', borderRadius: 10, border: 'none', background: GOLD, color: '#fff', fontSize: 15, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 700, cursor: 'pointer', marginBottom: 10 }}>
+            Upgrade to Pro — $19/mo
+          </button>
+          <button onClick={onClose} style={{ width: '100%', padding: '11px 0', borderRadius: 10, border: `1px solid ${BORDER}`, background: '#fff', color: MUTED, fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", cursor: 'pointer' }}>
+            Maybe later
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  if (joaoTasks) {
+    return (
+      <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+        <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth: 500, boxShadow: '0 20px 60px rgba(0,0,0,0.15)', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <span style={{ fontSize: 22 }}>◎</span>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>{guideName}'s suggested tasks</h3>
+          </div>
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>For project: <strong>{name}</strong></p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+            {joaoTasks.map((t, i) => (
+              <div key={i} style={{ background: OFF_WHITE, borderRadius: 10, padding: '12px 14px', border: `1px solid ${BORDER}` }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 6, border: `2px solid ${BORDER}`, background: '#fff', flexShrink: 0, marginTop: 1 }} />
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 500, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>{t.title}</div>
+                    {t.description && <div style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginTop: 3, lineHeight: 1.5 }}>{t.description}</div>}
+                  </div>
+                  {t.priority === 1 && <span style={{ fontSize: 10, background: '#FEE2E2', color: DANGER, padding: '2px 7px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, flexShrink: 0 }}>Critical</span>}
+                  {t.priority === 2 && <span style={{ fontSize: 10, background: '#FEF3C7', color: WARN, padding: '2px 7px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, flexShrink: 0 }}>High</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button onClick={() => setJoaoTasks(null)} style={{ flex: 1, padding: '11px 0', borderRadius: 10, border: `1px solid ${BORDER}`, background: '#fff', color: MUTED, fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", cursor: 'pointer' }}>Back</button>
+            {plan === 'pro' ? (
+              <button onClick={() => { onCreate(name.trim(), description.trim(), joaoTasks); onClose() }}
+                style={{ flex: 2, padding: '11px 0', borderRadius: 10, border: 'none', background: GREEN_DARK, color: '#fff', fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: 'pointer' }}>
+                Add to My Journey
+              </button>
+            ) : (
+              <button onClick={() => setShowPaywall(true)}
+                style={{ flex: 2, padding: '11px 0', borderRadius: 10, border: 'none', background: GOLD, color: '#fff', fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: 'pointer' }}>
+                Upgrade to Save ✨
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div style={{ background: '#fff', borderRadius: 16, padding: 28, width: '100%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.15)' }}>
+        <h3 style={{ margin: '0 0 20px', fontSize: 18, fontWeight: 700, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>New Project</h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", display: 'block', marginBottom: 6 }}>Project name *</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="e.g. Register kids for public school"
+              style={{ width: '100%', padding: '10px 12px', border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", boxSizing: 'border-box', outline: 'none' }} />
+          </div>
+          <div>
+            <label style={{ fontSize: 12, fontWeight: 600, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", display: 'block', marginBottom: 6 }}>What's this project about? (optional)</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} placeholder="Give Joao some context to build a better task list..."
+              rows={3} style={{ width: '100%', padding: '10px 12px', border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", boxSizing: 'border-box', resize: 'vertical', outline: 'none' }} />
+          </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 24 }}>
+          <button onClick={askJoao} disabled={!name.trim() || loading}
+            style={{ width: '100%', padding: '13px 0', borderRadius: 10, border: 'none', background: name.trim() && !loading ? GREEN_DARK : BORDER, color: name.trim() && !loading ? '#fff' : MUTED, fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: name.trim() && !loading ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            {loading ? 'Asking Joao...' : `◎ Let ${guideName} build my task list`}
+          </button>
+          <button onClick={() => { if (name.trim()) { onCreate(name.trim(), description.trim(), null); onClose() } }} disabled={!name.trim()}
+            style={{ width: '100%', padding: '11px 0', borderRadius: 10, border: `1px solid ${BORDER}`, background: '#fff', color: name.trim() ? DARK : MUTED, fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", cursor: name.trim() ? 'pointer' : 'default' }}>
+            Build it myself
+          </button>
+          <button onClick={onClose} style={{ width: '100%', padding: '11px 0', borderRadius: 10, border: 'none', background: 'none', color: MUTED, fontSize: 13, fontFamily: "'Helvetica Neue', sans-serif", cursor: 'pointer' }}>Cancel</button>
         </div>
       </div>
     </div>
@@ -303,10 +474,11 @@ function DashboardInner() {
   const [loading, setLoading] = useState(true)
   const [taskLoading, setTaskLoading] = useState(false)
   const [isMobile, setIsMobile] = useState(false)
+  const [showAddTask, setShowAddTask] = useState(false)
+  const [showAddProject, setShowAddProject] = useState(false)
+  const [projects, setProjects] = useState<Project[]>([])
 
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
-  )
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   useEffect(() => {
     const check = () => setIsMobile((window.screen?.width || 1440) <= 768)
@@ -316,10 +488,7 @@ function DashboardInner() {
   }, [])
 
   useEffect(() => { loadDashboard() }, [])
-
-  useEffect(() => {
-    if (activeProject) loadTasks(activeProject.id)
-  }, [activeProject])
+  useEffect(() => { if (activeProject) loadTasks(activeProject.id) }, [activeProject])
 
   async function loadDashboard() {
     setLoading(true)
@@ -339,12 +508,15 @@ function DashboardInner() {
           const res2 = await apiFetch('/api/dashboard')
           const json2 = await res2.json()
           setData(json2)
+          setProjects(json2.projects || [])
           if (json2.projects?.length > 0) setActiveProject(json2.projects[0])
         } else {
           setData(json)
+          setProjects([])
         }
       } else {
         setData(json)
+        setProjects(json.projects || [])
         setActiveProject(json.projects[0])
       }
     } catch (e) {
@@ -377,17 +549,67 @@ function DashboardInner() {
   async function toggleTask(task: Task) {
     const newStatus = task.status === 'completed' ? 'pending' : 'completed'
     setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: newStatus } : t))
-    if (activeProject) {
-      const updatedTasks = tasks.map(t => t.id === task.id ? { ...t, status: newStatus } : t)
-      const completedCount = updatedTasks.filter(t => t.status === 'completed').length
-      const progress = Math.round((completedCount / updatedTasks.length) * 100)
-      setActiveProject(prev => prev ? { ...prev, progress, completed_tasks: completedCount } : prev)
-    }
     try {
       await apiFetch('/api/tasks', { method: 'PATCH', body: JSON.stringify({ id: task.id, status: newStatus }) })
     } catch (e) {
       setTasks(prev => prev.map(t => t.id === task.id ? { ...t, status: task.status } : t))
     }
+  }
+
+  async function deleteTask(task: Task) {
+    if (!confirm(`Delete "${task.title}"?`)) return
+    setTasks(prev => prev.filter(t => t.id !== task.id))
+    try {
+      await apiFetch('/api/tasks', { method: 'DELETE', body: JSON.stringify({ id: task.id }) })
+    } catch (e) {
+      setTasks(prev => [...prev, task])
+    }
+  }
+
+  async function addTask(title: string, description: string, phase: string | null, priority: number) {
+    if (!activeProject) return
+    try {
+      const res = await apiFetch('/api/tasks', {
+        method: 'POST',
+        body: JSON.stringify({ project_id: activeProject.id, title, description, phase, priority })
+      })
+      const json = await res.json()
+      if (json.task) setTasks(prev => [...prev, json.task])
+    } catch (e) {
+      console.error('Add task error', e)
+    }
+  }
+
+  async function createProject(name: string, description: string, customTasks: any[] | null) {
+    try {
+      const res = await apiFetch('/api/projects', {
+        method: 'POST',
+        body: JSON.stringify({ name, type: 'custom', custom_tasks: customTasks })
+      })
+      const json = await res.json()
+      if (json.project) {
+        await loadDashboard()
+        setActiveProject(json.project)
+        setActiveTab('checklist')
+      }
+    } catch (e) {
+      console.error('Create project error', e)
+    }
+  }
+
+  async function handleTaskDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = tasks.findIndex(t => t.id === active.id)
+    const newIndex = tasks.findIndex(t => t.id === over.id)
+    const reordered = arrayMove(tasks, oldIndex, newIndex)
+    setTasks(reordered)
+    // Save new order_index for all affected tasks
+    const updates = reordered.map((t, i) => apiFetch('/api/tasks', {
+      method: 'PATCH',
+      body: JSON.stringify({ id: t.id, order_index: i })
+    }))
+    await Promise.all(updates)
   }
 
   async function toggleChatTask(item: ChecklistItem) {
@@ -400,7 +622,7 @@ function DashboardInner() {
     }
   }
 
-  function handleDragEnd(event: DragEndEvent) {
+  function handleChatDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || active.id === over.id) return
     setChatTasks(prev => {
@@ -421,6 +643,7 @@ function DashboardInner() {
   const pendingTasks = tasks.filter(t => t.status !== 'completed')
   const criticalTasks = pendingTasks.filter(t => t.priority === 1)
   const guideName = profile.guide_choice === 'andreia' ? 'Andreia' : 'Joao'
+  const isCustomProject = activeProject?.type === 'custom'
 
   const currentPhase = tasks.length > 0 ? getCurrentPhase(tasks) : ''
   const currentPhaseNumber = currentPhase ? getPhaseNumber(currentPhase) : 0
@@ -441,6 +664,22 @@ function DashboardInner() {
     <div style={{ display: 'flex', minHeight: '100vh', background: OFF_WHITE, fontFamily: 'Georgia, serif' }}>
       {!isMobile && <Sidebar activePage="dashboard" profile={profile} onLogout={handleLogout} />}
       {isMobile && <MobileHeader activePage="dashboard" profile={profile} onLogout={handleLogout} />}
+
+      {showAddTask && (
+        <AddTaskModal
+          onClose={() => setShowAddTask(false)}
+          onAdd={addTask}
+          phases={isCustomProject ? [] : PHASE_ORDER}
+        />
+      )}
+      {showAddProject && (
+        <AddProjectModal
+          onClose={() => setShowAddProject(false)}
+          onCreate={createProject}
+          plan={profile.plan || 'free'}
+          guideName={guideName}
+        />
+      )}
 
       <div style={{ flex: 1, minWidth: 0, paddingTop: isMobile ? 56 : 0, overflowX: 'hidden' }}>
         <div style={{ padding: isMobile ? '24px 16px 0' : '32px 32px 0' }}>
@@ -490,7 +729,7 @@ function DashboardInner() {
                     <div>
                       <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>Current Project</div>
                       <h2 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 700, color: DARK }}>{activeProject.name}</h2>
-                      {currentPhase && (
+                      {currentPhase && !isCustomProject && (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                           <span style={{ fontSize: 13, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
                             {currentPhaseEmoji} {currentPhase} (Phase {currentPhaseNumber})
@@ -502,7 +741,7 @@ function DashboardInner() {
                         </div>
                       )}
                     </div>
-                    <ProgressRing progress={currentPhaseProgress} size={80} />
+                    <ProgressRing progress={isCustomProject ? activeProject.progress : currentPhaseProgress} size={80} />
                   </div>
 
                   <div style={{ background: GREEN_LIGHT, borderRadius: 99, height: 6, marginBottom: 20 }}>
@@ -566,21 +805,45 @@ function DashboardInner() {
           {/* ── CHECKLIST TAB ── */}
           {activeTab === 'checklist' && (
             <div>
-              {data?.projects && data.projects.length > 1 && (
-                <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-                  {data.projects.map(p => (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 10 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {projects.map(p => (
                     <button key={p.id} onClick={() => setActiveProject(p)}
                       style={{ padding: '7px 14px', borderRadius: 20, border: `1px solid ${activeProject?.id === p.id ? GREEN_DARK : BORDER}`, background: activeProject?.id === p.id ? GREEN_LIGHT : '#fff', color: activeProject?.id === p.id ? GREEN_DARK : MUTED, fontSize: 13, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: activeProject?.id === p.id ? 600 : 400, cursor: 'pointer' }}>
                       {p.name}
                     </button>
                   ))}
+                  <button onClick={() => setShowAddProject(true)}
+                    style={{ padding: '7px 14px', borderRadius: 20, border: `1px dashed ${BORDER}`, background: '#fff', color: MUTED, fontSize: 13, fontFamily: "'Helvetica Neue', sans-serif", cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    + Add Project
+                  </button>
                 </div>
-              )}
+                <button onClick={() => setShowAddTask(true)}
+                  style={{ padding: '8px 16px', borderRadius: 10, border: 'none', background: GREEN_DARK, color: '#fff', fontSize: 13, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  + Add Task
+                </button>
+              </div>
+
               {taskLoading ? (
                 <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>Loading tasks...</div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-                  {PHASE_ORDER.map(phase => {
+
+                  {/* Custom project — flat sortable list */}
+                  {isCustomProject && (
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTaskDragEnd}>
+                      <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {tasks.map(task => (
+                            <SortableTask key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={true} />
+                          ))}
+                        </div>
+                      </SortableContext>
+                    </DndContext>
+                  )}
+
+                  {/* D7/template project — grouped by phase, sortable within each phase */}
+                  {!isCustomProject && PHASE_ORDER.map(phase => {
                     const phaseTasks = tasks.filter(t => t.phase === phase).sort((a, b) => a.order_index - b.order_index)
                     if (phaseTasks.length === 0) return null
                     const completedCount = phaseTasks.filter(t => t.status === 'completed').length
@@ -594,43 +857,52 @@ function DashboardInner() {
                           <span style={{ fontSize: 14, fontWeight: 700, color: isPhaseComplete ? GREEN_DARK : DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
                             {phase} (Phase {phaseNum})
                           </span>
-                          {isPhaseComplete && (
-                            <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Complete ✓</span>
-                          )}
+                          {isPhaseComplete && <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Complete ✓</span>}
                           <Link href={getChatUrl(phase, guideName)}
                             style={{ fontSize: 12, padding: '3px 10px', background: GREEN_LIGHT, color: GREEN_DARK, borderRadius: 8, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
                             ◎ Chat with {guideName}
                           </Link>
                           <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginLeft: 'auto' }}>{completedCount}/{phaseTasks.length}</span>
                         </div>
-                        <TaskList tasks={phaseTasks} onToggle={toggleTask} />
+                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTaskDragEnd}>
+                          <SortableContext items={phaseTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              {phaseTasks.map(task => (
+                                <SortableTask key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={false} />
+                              ))}
+                            </div>
+                          </SortableContext>
+                        </DndContext>
                       </div>
                     )
                   })}
 
-                  {tasks.filter(t => !t.phase).length > 0 && (
+                  {!isCustomProject && tasks.filter(t => !t.phase).length > 0 && (
                     <div>
                       <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Other Tasks</div>
-                      <TaskList tasks={tasks.filter(t => !t.phase)} onToggle={toggleTask} />
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTaskDragEnd}>
+                        <SortableContext items={tasks.filter(t => !t.phase).map(t => t.id)} strategy={verticalListSortingStrategy}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {tasks.filter(t => !t.phase).map(task => (
+                              <SortableTask key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={false} />
+                            ))}
+                          </div>
+                        </SortableContext>
+                      </DndContext>
                     </div>
                   )}
 
-                  {/* ── CHAT-ADDED TASKS — DRAGGABLE ── */}
                   {chatTasks.length > 0 && (
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                         <span style={{ fontSize: 18 }}>◎</span>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
-                          Added by {guideName}
-                        </span>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>Added by {guideName}</span>
                         <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
                           {chatTasks.filter(i => i.status === 'completed').length}/{chatTasks.length}
                         </span>
                       </div>
-                      <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>
-                        Drag to reorder
-                      </div>
-                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>Drag to reorder</div>
+                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleChatDragEnd}>
                         <SortableContext items={chatTasks.map(i => i.id)} strategy={verticalListSortingStrategy}>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                             {chatTasks.map(item => (
@@ -643,7 +915,9 @@ function DashboardInner() {
                   )}
 
                   {tasks.length === 0 && chatTasks.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>No tasks yet.</div>
+                    <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>
+                      No tasks yet. Hit "+ Add Task" to get started.
+                    </div>
                   )}
                 </div>
               )}
