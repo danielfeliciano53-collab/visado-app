@@ -206,15 +206,6 @@ export default function OnboardingPage() {
                 </div>
               </div>
 
-              <div style={{ marginBottom: 20 }}>
-                <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Estimated move date (optional)</label>
-                <input
-                  type="month"
-                  value={moveDate}
-                  onChange={e => setMoveDate(e.target.value)}
-                  style={{ width: '100%', padding: '11px 12px', border: `1.5px solid ${BORDER}`, borderRadius: 10, fontSize: 14, fontFamily: "'Helvetica Neue', sans-serif", color: DARK, background: '#fff', outline: 'none', boxSizing: 'border-box' }}
-                />
-              </div>
 
               <div style={{ marginBottom: 20 }}>
                 <label style={{ display: 'block', fontSize: 12, fontWeight: 600, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Who's making the move?</label>

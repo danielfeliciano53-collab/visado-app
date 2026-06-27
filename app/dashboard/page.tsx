@@ -503,7 +503,7 @@ function DashboardInner() {
         const nameMap: Record<string, string> = { d7_visa: 'D7 Passive Income Visa', digital_nomad: 'Digital Nomad Visa (D8)', golden_visa: 'Golden Visa' }
         const type = typeMap[visaType] || 'd7_visa'
         const name = nameMap[visaType] || 'Portugal Visa Journey'
-        const createRes = await apiFetch('/api/projects', { method: 'POST', body: JSON.stringify({ type, name }) })
+        const createRes = await apiFetch('/api/projects', { method: 'POST', body: JSON.stringify({ type, name, custom_tasks: null }) })
         if (createRes.ok) {
           const res2 = await apiFetch('/api/dashboard')
           const json2 = await res2.json()
