@@ -488,7 +488,7 @@ function DashboardInner() {
   }, [])
 
   useEffect(() => { loadDashboard() }, [])
-  useEffect(() => { if (activeProject) loadTasks(activeProject.id) }, [activeProject])
+  useEffect(() => { if (activeProject?.id) loadTasks(activeProject.id) }, [activeProject?.id])
 
   async function loadDashboard() {
     setLoading(true)
