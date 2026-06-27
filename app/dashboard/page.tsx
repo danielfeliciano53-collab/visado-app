@@ -600,12 +600,34 @@ function DashboardInner() {
   async function handleTaskDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || active.id === over.id) return
-    const oldIndex = tasks.findIndex(t => t.id === active.id)
-    const newIndex = tasks.findIndex(t => t.id === over.id)
-    const reordered = arrayMove(tasks, oldIndex, newIndex)
-    setTasks(reordered)
-    // Save new order_index for all affected tasks
-    const updates = reordered.map((t, i) => apiFetch('/api/tasks', {
+
+    const activeTask = tasks.find(t => t.id === active.id)
+    const overTask = tasks.find(t => t.id === over.id)
+    if (!activeTask || !overTask) return
+
+    // Get the subset of tasks in the same phase (or all tasks for custom projects)
+    const phase = activeTask.phase || null
+    const phaseSubset = tasks.filter(t => (t.phase || null) === phase)
+
+    const oldIndex = phaseSubset.findIndex(t => t.id === active.id)
+    const newIndex = phaseSubset.findIndex(t => t.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+
+    const reorderedSubset = arrayMove(phaseSubset, oldIndex, newIndex)
+
+    // Rebuild full tasks array with reordered subset spliced in
+    const otherTasks = tasks.filter(t => (t.phase || null) !== phase)
+    const newTasks = [...otherTasks, ...reorderedSubset].sort((a, b) => {
+      // Keep phase grouping stable
+      const phaseA = PHASE_ORDER.indexOf(a.phase || '')
+      const phaseB = PHASE_ORDER.indexOf(b.phase || '')
+      if (phaseA !== phaseB) return phaseA - phaseB
+      return reorderedSubset.findIndex(t => t.id === a.id) - reorderedSubset.findIndex(t => t.id === b.id)
+    })
+    setTasks(newTasks)
+
+    // Save new order_index only for the reordered subset
+    const updates = reorderedSubset.map((t, i) => apiFetch('/api/tasks', {
       method: 'PATCH',
       body: JSON.stringify({ id: t.id, order_index: i })
     }))
