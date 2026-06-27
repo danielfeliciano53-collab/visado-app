@@ -605,7 +605,6 @@ function DashboardInner() {
     const overTask = tasks.find(t => t.id === over.id)
     if (!activeTask || !overTask) return
 
-    // Get the subset of tasks in the same phase (or all tasks for custom projects)
     const phase = activeTask.phase || null
     const phaseSubset = tasks.filter(t => (t.phase || null) === phase)
 
@@ -615,23 +614,26 @@ function DashboardInner() {
 
     const reorderedSubset = arrayMove(phaseSubset, oldIndex, newIndex)
 
-    // Rebuild full tasks array with reordered subset spliced in
-    const otherTasks = tasks.filter(t => (t.phase || null) !== phase)
-    const newTasks = [...otherTasks, ...reorderedSubset].sort((a, b) => {
-      // Keep phase grouping stable
-      const phaseA = PHASE_ORDER.indexOf(a.phase || '')
-      const phaseB = PHASE_ORDER.indexOf(b.phase || '')
-      if (phaseA !== phaseB) return phaseA - phaseB
-      return reorderedSubset.findIndex(t => t.id === a.id) - reorderedSubset.findIndex(t => t.id === b.id)
+    // Replace just the phase tasks in the full array, keep everything else in place
+    setTasks(prev => {
+      const result = [...prev]
+      const phaseIndices = result.reduce<number[]>((acc, t, i) => {
+        if ((t.phase || null) === phase) acc.push(i)
+        return acc
+      }, [])
+      phaseIndices.forEach((globalIdx, subsetIdx) => {
+        result[globalIdx] = reorderedSubset[subsetIdx]
+      })
+      return result
     })
-    setTasks(newTasks)
 
-    // Save new order_index only for the reordered subset
-    const updates = reorderedSubset.map((t, i) => apiFetch('/api/tasks', {
-      method: 'PATCH',
-      body: JSON.stringify({ id: t.id, order_index: i })
-    }))
-    await Promise.all(updates)
+    // Persist new order_index for reordered subset
+    await Promise.all(
+      reorderedSubset.map((t, i) => apiFetch('/api/tasks', {
+        method: 'PATCH',
+        body: JSON.stringify({ id: t.id, order_index: i })
+      }))
+    )
   }
 
   async function toggleChatTask(item: ChecklistItem) {
