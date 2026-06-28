@@ -854,99 +854,91 @@ function DashboardInner() {
               {taskLoading ? (
                 <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>Loading tasks...</div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTaskDragEnd}>
+                <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
 
-                  {/* Custom project — flat sortable list */}
-                  {isCustomProject && (
-                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTaskDragEnd}>
-                      <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                    {/* Custom project — flat sortable list */}
+                    {isCustomProject && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {tasks.map(task => (
+                          <SortableTask key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={true} />
+                        ))}
+                      </div>
+                    )}
+
+                    {/* D7/template project — grouped by phase */}
+                    {!isCustomProject && PHASE_ORDER.map(phase => {
+                      const phaseTasks = tasks.filter(t => t.phase === phase).sort((a, b) => a.order_index - b.order_index)
+                      if (phaseTasks.length === 0) return null
+                      const completedCount = phaseTasks.filter(t => t.status === 'completed').length
+                      const isPhaseComplete = completedCount === phaseTasks.length
+                      const phaseEmoji = PHASE_EMOJI[phase] || '📋'
+                      const phaseNum = getPhaseNumber(phase)
+                      return (
+                        <div key={phase}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: 18 }}>{phaseEmoji}</span>
+                            <span style={{ fontSize: 14, fontWeight: 700, color: isPhaseComplete ? GREEN_DARK : DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
+                              {phase} (Phase {phaseNum})
+                            </span>
+                            {isPhaseComplete && <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Complete ✓</span>}
+                            <Link href={getChatUrl(phase, guideName)}
+                              style={{ fontSize: 12, padding: '3px 10px', background: GREEN_LIGHT, color: GREEN_DARK, borderRadius: 8, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
+                              ◎ Chat with {guideName}
+                            </Link>
+                            <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginLeft: 'auto' }}>{completedCount}/{phaseTasks.length}</span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {phaseTasks.map(task => (
+                              <SortableTask key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={false} />
+                            ))}
+                          </div>
+                        </div>
+                      )
+                    })}
+
+                    {!isCustomProject && tasks.filter(t => !t.phase).length > 0 && (
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Other Tasks</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          {tasks.map(task => (
-                            <SortableTask key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={true} />
+                          {tasks.filter(t => !t.phase).map(task => (
+                            <SortableTask key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={false} />
                           ))}
                         </div>
-                      </SortableContext>
-                    </DndContext>
-                  )}
+                      </div>
+                    )}
 
-                  {/* D7/template project — grouped by phase, sortable within each phase */}
-                  {!isCustomProject && PHASE_ORDER.map(phase => {
-                    const phaseTasks = tasks.filter(t => t.phase === phase).sort((a, b) => a.order_index - b.order_index)
-                    if (phaseTasks.length === 0) return null
-                    const completedCount = phaseTasks.filter(t => t.status === 'completed').length
-                    const isPhaseComplete = completedCount === phaseTasks.length
-                    const phaseEmoji = PHASE_EMOJI[phase] || '📋'
-                    const phaseNum = getPhaseNumber(phase)
-                    return (
-                      <div key={phase}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12, flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: 18 }}>{phaseEmoji}</span>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: isPhaseComplete ? GREEN_DARK : DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>
-                            {phase} (Phase {phaseNum})
+                    {chatTasks.length > 0 && (
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                          <span style={{ fontSize: 18 }}>◎</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>Added by {guideName}</span>
+                          <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
+                            {chatTasks.filter(i => i.status === 'completed').length}/{chatTasks.length}
                           </span>
-                          {isPhaseComplete && <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>Complete ✓</span>}
-                          <Link href={getChatUrl(phase, guideName)}
-                            style={{ fontSize: 12, padding: '3px 10px', background: GREEN_LIGHT, color: GREEN_DARK, borderRadius: 8, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
-                            ◎ Chat with {guideName}
-                          </Link>
-                          <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginLeft: 'auto' }}>{completedCount}/{phaseTasks.length}</span>
                         </div>
-                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTaskDragEnd}>
-                          <SortableContext items={phaseTasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+                        <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>Drag to reorder</div>
+                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleChatDragEnd}>
+                          <SortableContext items={chatTasks.map(i => i.id)} strategy={verticalListSortingStrategy}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                              {phaseTasks.map(task => (
-                                <SortableTask key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={false} />
+                              {chatTasks.map(item => (
+                                <SortableChatTask key={item.id} item={item} onToggle={toggleChatTask} />
                               ))}
                             </div>
                           </SortableContext>
                         </DndContext>
                       </div>
-                    )
-                  })}
+                    )}
 
-                  {!isCustomProject && tasks.filter(t => !t.phase).length > 0 && (
-                    <div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Other Tasks</div>
-                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTaskDragEnd}>
-                        <SortableContext items={tasks.filter(t => !t.phase).map(t => t.id)} strategy={verticalListSortingStrategy}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            {tasks.filter(t => !t.phase).map(task => (
-                              <SortableTask key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={false} />
-                            ))}
-                          </div>
-                        </SortableContext>
-                      </DndContext>
-                    </div>
-                  )}
-
-                  {chatTasks.length > 0 && (
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
-                        <span style={{ fontSize: 18 }}>◎</span>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>Added by {guideName}</span>
-                        <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
-                          {chatTasks.filter(i => i.status === 'completed').length}/{chatTasks.length}
-                        </span>
+                    {tasks.length === 0 && chatTasks.length === 0 && (
+                      <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>
+                        No tasks yet. Hit "+ Add Task" to get started.
                       </div>
-                      <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>Drag to reorder</div>
-                      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleChatDragEnd}>
-                        <SortableContext items={chatTasks.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            {chatTasks.map(item => (
-                              <SortableChatTask key={item.id} item={item} onToggle={toggleChatTask} />
-                            ))}
-                          </div>
-                        </SortableContext>
-                      </DndContext>
-                    </div>
-                  )}
-
-                  {tasks.length === 0 && chatTasks.length === 0 && (
-                    <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>
-                      No tasks yet. Hit "+ Add Task" to get started.
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                </SortableContext>
+              </DndContext>
               )}
             </div>
           )}
