@@ -614,13 +614,15 @@ function DashboardInner() {
 
     const reorderedSubset = arrayMove(phaseSubset, oldIndex, newIndex)
 
-    // Replace just the phase tasks in the full array, keep everything else in place
+    console.log('[drag] reordering phase:', phase, 'oldIndex:', oldIndex, 'newIndex:', newIndex)
+    console.log('[drag] reorderedSubset titles:', reorderedSubset.map(t => t.title))
     setTasks(prev => {
       const result = [...prev]
       const phaseIndices = result.reduce<number[]>((acc, t, i) => {
         if ((t.phase || null) === phase) acc.push(i)
         return acc
       }, [])
+      console.log('[drag] phaseIndices:', phaseIndices, 'subset length:', reorderedSubset.length)
       phaseIndices.forEach((globalIdx, subsetIdx) => {
         result[globalIdx] = reorderedSubset[subsetIdx]
       })
