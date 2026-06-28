@@ -158,6 +158,7 @@ export default function HomePage() {
           <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
             <Link href="/privacy" style={{ fontSize: 13, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Privacy Policy</Link>
             <Link href="/terms" style={{ fontSize: 13, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Terms of Service</Link>
+            <Link href="/security" style={{ fontSize: 13, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Security</Link>
             <Link href="/contact" style={{ fontSize: 13, color: MUTED, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif" }}>Contact</Link>
           </div>
           <div style={{ flexBasis: '100%', fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif" }}>

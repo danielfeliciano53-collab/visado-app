@@ -20,7 +20,7 @@ export default function ContactPage() {
           <p style={{ fontSize: 14, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginTop: 8, marginBottom: 0, lineHeight: 1.6 }}>Response time: within 1–2 business days</p>
         </div>
         <div style={{ background: '#fff', border: `1px solid ${BORDER}`, borderRadius: 16, padding: 32 }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>What to contact us about</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }}>Feel free to ask about these topics or anything else</div>
           {[
             { icon: '◎', label: 'General questions', sub: 'How Visado works, visa questions, feature requests' },
             { icon: '⊠', label: 'Account & billing', sub: 'Login issues, subscription changes, refund requests' },
@@ -35,11 +35,6 @@ export default function ContactPage() {
               </div>
             </div>
           ))}
-        </div>
-        <div style={{ marginTop: 40, padding: '20px 24px', background: GREEN_LIGHT, borderRadius: 12 }}>
-          <p style={{ margin: 0, fontSize: 14, color: GREEN_DARK, fontFamily: "'Helvetica Neue', sans-serif", lineHeight: 1.6 }}>
-            <strong>Visado</strong> is operated by Red Tree Hill LLC. We're based in Portugal and the United States.
-          </p>
         </div>
       </div>
     </div>
