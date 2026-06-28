@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
-const PROTECTED = ['/dashboard', '/chat', '/vault', '/account', '/contact', '/admin']
+const PROTECTED = ['/dashboard', '/chat', '/vault', '/account', '/admin']
 
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('visado_token')?.value
@@ -14,5 +14,5 @@ export function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/chat/:path*', '/vault/:path*', '/account/:path*', '/contact/:path*'],
+  matcher: ['/dashboard/:path*', '/chat/:path*', '/vault/:path*', '/account/:path*', '/admin/:path*'],
 }
