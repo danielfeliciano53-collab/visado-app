@@ -627,11 +627,12 @@ function DashboardInner() {
       return result
     })
 
-    // Persist new order_index for reordered subset
+    // Persist new order_index preserving global offset
+    const phaseStartIndex = tasks.findIndex(t => (t.phase || null) === phase)
     await Promise.all(
       reorderedSubset.map((t, i) => apiFetch('/api/tasks', {
         method: 'PATCH',
-        body: JSON.stringify({ id: t.id, order_index: i })
+        body: JSON.stringify({ id: t.id, order_index: phaseStartIndex + i })
       }))
     )
   }
