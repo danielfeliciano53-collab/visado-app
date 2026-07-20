@@ -15,7 +15,7 @@ const BORDER = '#E5E7EB'
 const DANGER = '#EF4444'
 const GOLD = '#C9942A'
 
-const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/4gM4gA2t94561v1cVMabK00'
+const STRIPE_PAYMENT_LINK = ''
 
 const VISA_OPTIONS = [
   { value: 'd7', label: 'D7 Passive Income Visa' },
@@ -272,9 +272,15 @@ export default function AccountPage() {
                 </div>
               </div>
               {profile.plan !== 'pro' && (
-                <a href={STRIPE_PAYMENT_LINK} style={{ padding: '10px 20px', background: GREEN_DARK, color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", flexShrink: 0 }}>
-                  Upgrade to Pro
-                </a>
+                <button onClick={async () => {
+                  try {
+                    const res = await apiFetch('/api/stripe-checkout')
+                    const json = await res.json()
+                    if (json.url) window.location.href = json.url
+                  } catch (e) {
+                    console.error('Checkout error', e)
+                  }
+                }} style={{ padding: '10px 20px', background: GREEN_DARK, color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif", flexShrink: 0 }}>Upgrade to Pro</button>
               )}
             </div>
 
