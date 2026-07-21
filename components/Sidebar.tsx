@@ -1,6 +1,7 @@
 'use client'
 import Link from 'next/link'
 import Image from 'next/image'
+import { apiFetch } from '../lib/api'
 
 const NAVY = '#1B2F6E'
 const NAVY_DARK = '#111E47'
@@ -60,9 +61,17 @@ export default function Sidebar({ activePage, profile, onLogout }: SidebarProps)
           </div>
         </Link>
         {profile?.plan !== 'pro' && (
-          <Link href="https://buy.stripe.com/4gM4gA2t94561v1cVMabK00" style={{ display: 'block', textAlign: 'center', padding: '9px', background: GOLD, color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, textDecoration: 'none', fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 8 }}>
+          <button onClick={async () => {
+            try {
+              const res = await apiFetch('/api/stripe-checkout')
+              const json = await res.json()
+              if (json.url) window.location.href = json.url
+            } catch (e) {
+              console.error('Checkout error', e)
+            }
+          }} style={{ display: 'block', width: '100%', textAlign: 'center', padding: '9px', background: GOLD, color: '#fff', borderRadius: 8, fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 8 }}>
             Upgrade to Pro
-          </Link>
+          </button>
         )}
         <button onClick={onLogout} style={{ display: 'block', width: '100%', textAlign: 'center', padding: '8px', background: 'none', border: `1px solid ${BORDER}`, borderRadius: 8, fontSize: 13, color: MUTED, cursor: 'pointer', fontFamily: "'Helvetica Neue', sans-serif" }}>
           Log out
