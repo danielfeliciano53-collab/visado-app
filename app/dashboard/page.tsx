@@ -91,8 +91,6 @@ interface ChecklistItem {
   tips?: string
   source: string
   created_at: string
-  phase?: string | null
-  order_index?: number
 }
 
 interface Project {
