@@ -80,7 +80,7 @@ interface Task {
   due_date: string | null
   order_index: number
   completed_at: string | null
-  phase?: string
+  phase?: string | null
 }
 
 interface ChecklistItem {
