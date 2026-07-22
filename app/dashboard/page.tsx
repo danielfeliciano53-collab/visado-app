@@ -12,6 +12,8 @@ import {
   useSensor,
   useSensors,
   DragEndEvent,
+  DragStartEvent,
+  DragOverlay,
 } from '@dnd-kit/core'
 import {
   arrayMove,
@@ -480,7 +482,9 @@ function DashboardInner() {
   const [showAddProject, setShowAddProject] = useState(false)
   const [projects, setProjects] = useState<Project[]>([])
 
+  type ContainerItem = { type: 'task' | 'chat'; id: string; order_index: number; data: Task | ChecklistItem }
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
+  const [activeDragItem, setActiveDragItem] = useState<ContainerItem | null>(null)
 
   useEffect(() => {
     const check = () => setIsMobile((window.screen?.width || 1440) <= 768)
@@ -599,8 +603,6 @@ function DashboardInner() {
     }
   }
 
-  type ContainerItem = { type: 'task' | 'chat'; id: string; order_index: number; data: Task | ChecklistItem }
-
   function getContainerId(phase: string | null | undefined): string {
     return phase || 'unassigned'
   }
@@ -616,7 +618,16 @@ function DashboardInner() {
     return [...taskItems, ...chatItems].sort((a, b) => a.order_index - b.order_index)
   }
 
+  function handleUnifiedDragStart(event: DragStartEvent) {
+    const id = event.active.id
+    const t = tasks.find(x => x.id === id)
+    const c = chatTasks.find(x => x.id === id)
+    if (t) setActiveDragItem({ type: 'task', id: t.id, order_index: t.order_index ?? 0, data: t })
+    else if (c) setActiveDragItem({ type: 'chat', id: c.id, order_index: c.order_index ?? 0, data: c })
+  }
+
   async function handleUnifiedDragEnd(event: DragEndEvent) {
+    setActiveDragItem(null)
     const { active, over } = event
     if (!over || active.id === over.id) return
 
@@ -868,7 +879,7 @@ function DashboardInner() {
               {taskLoading ? (
                 <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>Loading tasks...</div>
               ) : (
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleUnifiedDragEnd}>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragStart={handleUnifiedDragStart} onDragEnd={handleUnifiedDragEnd}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
 
                     {/* Custom project — flat sortable list, no phases, no chat merge */}
@@ -945,6 +956,13 @@ function DashboardInner() {
                       </div>
                     )}
                   </div>
+                  <DragOverlay>
+                    {activeDragItem ? (
+                      activeDragItem.type === 'task'
+                        ? <SortableTask task={activeDragItem.data as Task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={false} />
+                        : <SortableChatTask item={activeDragItem.data as ChecklistItem} onToggle={toggleChatTask} />
+                    ) : null}
+                  </DragOverlay>
                 </DndContext>
               )}
             </div>
