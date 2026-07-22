@@ -599,68 +599,43 @@ function DashboardInner() {
     }
   }
 
-  type ContainerItem = { type: 'task' | 'chat'; id: string; order_index: number; data: Task | ChecklistItem }
-
-  function getContainerId(phase: string | null | undefined): string {
-    return phase || 'unassigned'
-  }
-
-  function itemsForContainer(containerId: string): ContainerItem[] {
-    const phase = containerId === 'unassigned' ? null : containerId
-    const taskItems: ContainerItem[] = tasks
-      .filter(t => (t.phase || null) === phase)
-      .map(t => ({ type: 'task', id: t.id, order_index: t.order_index ?? 0, data: t }))
-    const chatItems: ContainerItem[] = chatTasks
-      .filter(c => (c.phase || null) === phase)
-      .map(c => ({ type: 'chat', id: c.id, order_index: c.order_index ?? 0, data: c }))
-    return [...taskItems, ...chatItems].sort((a, b) => a.order_index - b.order_index)
-  }
-
-  async function handleUnifiedDragEnd(event: DragEndEvent) {
+  async function handleTaskDragEnd(event: DragEndEvent) {
     const { active, over } = event
     if (!over || active.id === over.id) return
 
     const activeTask = tasks.find(t => t.id === active.id)
-    const activeChat = chatTasks.find(c => c.id === active.id)
-    if (!activeTask && !activeChat) return
-
     const overTask = tasks.find(t => t.id === over.id)
-    const overChat = chatTasks.find(c => c.id === over.id)
+    if (!activeTask || !overTask) return
 
-    let overContainer: string
-    if (overTask) overContainer = getContainerId(overTask.phase)
-    else if (overChat) overContainer = getContainerId(overChat.phase)
-    else return
+    const phase = activeTask.phase || null
+    const phaseSubset = tasks.filter(t => (t.phase || null) === phase)
 
-    const newPhase = overContainer === 'unassigned' ? null : overContainer
-    const destItems = itemsForContainer(overContainer).filter(i => i.id !== active.id)
-    let overIndex = destItems.findIndex(i => i.id === over.id)
-    if (overIndex === -1) overIndex = destItems.length
+    const oldIndex = phaseSubset.findIndex(t => t.id === active.id)
+    const newIndex = phaseSubset.findIndex(t => t.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
 
-    const movedItem: ContainerItem = activeTask
-      ? { type: 'task', id: activeTask.id, order_index: 0, data: activeTask }
-      : { type: 'chat', id: activeChat!.id, order_index: 0, data: activeChat! }
+    const reorderedSubset = arrayMove(phaseSubset, oldIndex, newIndex)
 
-    const newDestOrder = [...destItems]
-    newDestOrder.splice(overIndex, 0, movedItem)
+    setTasks(prev => {
+      const result = [...prev]
+      const phaseIndices = result.reduce<number[]>((acc, t, i) => {
+        if ((t.phase || null) === phase) acc.push(i)
+        return acc
+      }, [])
+      phaseIndices.forEach((globalIdx, subsetIdx) => {
+        result[globalIdx] = reorderedSubset[subsetIdx]
+      })
+      return result
+    })
 
-    const phaseOffset = overContainer === 'unassigned' ? 90000 : PHASE_ORDER.indexOf(overContainer) * 1000
-
-    setTasks(prev => prev.map(t => {
-      const idx = newDestOrder.findIndex(it => it.type === 'task' && it.id === t.id)
-      return idx !== -1 ? { ...t, phase: newPhase, order_index: phaseOffset + idx } : t
-    }))
-    setChatTasks(prev => prev.map(c => {
-      const idx = newDestOrder.findIndex(it => it.type === 'chat' && it.id === c.id)
-      return idx !== -1 ? { ...c, phase: newPhase, order_index: phaseOffset + idx } : c
-    }))
-
-    await Promise.all(newDestOrder.map((it, idx) => {
-      const body = JSON.stringify({ id: it.id, phase: newPhase, order_index: phaseOffset + idx })
-      return it.type === 'task'
-        ? apiFetch('/api/tasks', { method: 'PATCH', body })
-        : apiFetch('/api/checklist', { method: 'PATCH', body })
-    }))
+    // Persist new order_index using phase-based offset to avoid cross-phase collisions
+    const phaseOffset = PHASE_ORDER.indexOf(phase || '') * 1000
+    await Promise.all(
+      reorderedSubset.map((t, i) => apiFetch('/api/tasks', {
+        method: 'PATCH',
+        body: JSON.stringify({ id: t.id, order_index: phaseOffset + i })
+      }))
+    )
   }
 
   async function toggleChatTask(item: ChecklistItem) {
@@ -671,6 +646,16 @@ function DashboardInner() {
     } catch (e) {
       setChatTasks(prev => prev.map(i => i.id === item.id ? { ...i, status: item.status } : i))
     }
+  }
+
+  function handleChatDragEnd(event: DragEndEvent) {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    setChatTasks(prev => {
+      const oldIndex = prev.findIndex(i => i.id === active.id)
+      const newIndex = prev.findIndex(i => i.id === over.id)
+      return arrayMove(prev, oldIndex, newIndex)
+    })
   }
 
   function handleLogout() {
@@ -868,26 +853,25 @@ function DashboardInner() {
               {taskLoading ? (
                 <div style={{ textAlign: 'center', padding: 40, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", fontSize: 13 }}>Loading tasks...</div>
               ) : (
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleUnifiedDragEnd}>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleTaskDragEnd}>
+                <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
 
-                    {/* Custom project — flat sortable list, no phases, no chat merge */}
+                    {/* Custom project — flat sortable list */}
                     {isCustomProject && (
-                      <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                          {tasks.map(task => (
-                            <SortableTask key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={true} />
-                          ))}
-                        </div>
-                      </SortableContext>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                        {tasks.map(task => (
+                          <SortableTask key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={true} />
+                        ))}
+                      </div>
                     )}
 
-                    {/* D7/template project — grouped by phase, tasks + Joao-suggested items merged and draggable between phases */}
+                    {/* D7/template project — grouped by phase */}
                     {!isCustomProject && PHASE_ORDER.map(phase => {
-                      const combined = itemsForContainer(phase)
-                      if (combined.length === 0) return null
-                      const completedCount = combined.filter(i => i.data.status === 'completed').length
-                      const isPhaseComplete = completedCount === combined.length
+                      const phaseTasks = tasks.filter(t => t.phase === phase).sort((a, b) => a.order_index - b.order_index)
+                      if (phaseTasks.length === 0) return null
+                      const completedCount = phaseTasks.filter(t => t.status === 'completed').length
+                      const isPhaseComplete = completedCount === phaseTasks.length
                       const phaseEmoji = PHASE_EMOJI[phase] || '📋'
                       const phaseNum = getPhaseNumber(phase)
                       return (
@@ -902,40 +886,47 @@ function DashboardInner() {
                               style={{ fontSize: 12, padding: '3px 10px', background: GREEN_LIGHT, color: GREEN_DARK, borderRadius: 8, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600, textDecoration: 'none', whiteSpace: 'nowrap' }}>
                               ◎ Chat with {guideName}
                             </Link>
-                            <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginLeft: 'auto' }}>{completedCount}/{combined.length}</span>
+                            <span style={{ fontSize: 12, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginLeft: 'auto' }}>{completedCount}/{phaseTasks.length}</span>
                           </div>
-                          <SortableContext items={combined.map(i => i.id)} strategy={verticalListSortingStrategy}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                              {combined.map(i => (
-                                i.type === 'task'
-                                  ? <SortableTask key={i.id} task={i.data as Task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={false} />
-                                  : <SortableChatTask key={i.id} item={i.data as ChecklistItem} onToggle={toggleChatTask} />
-                              ))}
-                            </div>
-                          </SortableContext>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                            {phaseTasks.map(task => (
+                              <SortableTask key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={false} />
+                            ))}
+                          </div>
                         </div>
                       )
                     })}
 
-                    {!isCustomProject && itemsForContainer('unassigned').length > 0 && (
+                    {!isCustomProject && tasks.filter(t => !t.phase).length > 0 && (
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Other Tasks</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                          {tasks.filter(t => !t.phase).map(task => (
+                            <SortableTask key={task.id} task={task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={false} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {chatTasks.length > 0 && (
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                           <span style={{ fontSize: 18 }}>◎</span>
-                          <span style={{ fontSize: 14, fontWeight: 700, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>Unassigned / Added by {guideName}</span>
+                          <span style={{ fontSize: 14, fontWeight: 700, color: DARK, fontFamily: "'Helvetica Neue', sans-serif" }}>Added by {guideName}</span>
                           <span style={{ fontSize: 11, background: GREEN_LIGHT, color: GREEN_DARK, padding: '2px 8px', borderRadius: 99, fontFamily: "'Helvetica Neue', sans-serif", fontWeight: 600 }}>
-                            {itemsForContainer('unassigned').filter(i => i.data.status === 'completed').length}/{itemsForContainer('unassigned').length}
+                            {chatTasks.filter(i => i.status === 'completed').length}/{chatTasks.length}
                           </span>
                         </div>
-                        <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>Drag into a phase above to assign it</div>
-                        <SortableContext items={itemsForContainer('unassigned').map(i => i.id)} strategy={verticalListSortingStrategy}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                            {itemsForContainer('unassigned').map(i => (
-                              i.type === 'task'
-                                ? <SortableTask key={i.id} task={i.data as Task} onToggle={toggleTask} onDelete={deleteTask} isCustomProject={false} />
-                                : <SortableChatTask key={i.id} item={i.data as ChecklistItem} onToggle={toggleChatTask} />
-                            ))}
-                          </div>
-                        </SortableContext>
+                        <div style={{ fontSize: 11, color: MUTED, fontFamily: "'Helvetica Neue', sans-serif", marginBottom: 12 }}>Drag to reorder</div>
+                        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleChatDragEnd}>
+                          <SortableContext items={chatTasks.map(i => i.id)} strategy={verticalListSortingStrategy}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                              {chatTasks.map(item => (
+                                <SortableChatTask key={item.id} item={item} onToggle={toggleChatTask} />
+                              ))}
+                            </div>
+                          </SortableContext>
+                        </DndContext>
                       </div>
                     )}
 
@@ -945,7 +936,8 @@ function DashboardInner() {
                       </div>
                     )}
                   </div>
-                </DndContext>
+                </SortableContext>
+              </DndContext>
               )}
             </div>
           )}
