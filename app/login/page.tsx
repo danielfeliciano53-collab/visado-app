@@ -39,7 +39,9 @@ export default function LoginPage() {
   }, [])
 
   function handleGoogleLogin() {
-    window.location.href = `${BACKEND_URL}/api/auth/google`
+    const supabaseUrl = 'https://jmvdlarhnhxmjfxbaevx.supabase.co'
+    const redirectTo = encodeURIComponent('https://app.visadoapp.com/auth/callback')
+    window.location.href = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${redirectTo}`
   }
 
   async function handleLogin(e: React.FormEvent) {
