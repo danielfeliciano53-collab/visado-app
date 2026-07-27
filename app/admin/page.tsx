@@ -317,6 +317,11 @@ export default function AdminPage() {
         {/* ── USERS TAB ── */}
         {activeTab === 'users' && (
           <div>
+            {cancelError && (
+              <div style={{ background: '#FEF2F2', color: DANGER, fontSize: 13, padding: '10px 14px', borderRadius: 8, marginBottom: 16, fontFamily: "'Helvetica Neue', sans-serif", border: `1px solid ${DANGER}` }}>
+                {cancelError}
+              </div>
+            )}
             {/* Filter buttons */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
               {(['all', 'pro', 'free', 'cancelled'] as const).map(f => (
