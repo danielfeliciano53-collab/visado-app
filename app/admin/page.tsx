@@ -70,6 +70,8 @@ export default function AdminPage() {
   const [error, setError] = useState('')
   const [activeTab, setActiveTab] = useState<'dashboard' | 'users' | 'revenue'>('dashboard')
   const [userFilter, setUserFilter] = useState<'all' | 'pro' | 'free' | 'cancelled'>('all')
+  const [cancelingUserId, setCancelingUserId] = useState<string | null>(null)
+  const [cancelError, setCancelError] = useState('')
   useEffect(() => { loadStats() }, [])
 
   async function loadStats() {
@@ -90,6 +92,35 @@ export default function AdminPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  async function handleCancelSubscription(userId: string, email: string) {
+    if (!window.confirm(`Cancel the Pro subscription for ${email}? This will cancel their Stripe subscription immediately and downgrade them to Free.`)) {
+      return
+    }
+    setCancelingUserId(userId)
+    setCancelError('')
+    try {
+      const adminToken = localStorage.getItem('visado_admin_token')
+      const res = await fetch('https://visado-backend.vercel.app/api/admin/cancel-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ userId }),
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) {
+        setCancelError(data.error || 'Failed to cancel subscription')
+      } else {
+        loadStats()
+      }
+    } catch (e) {
+      console.error('Admin cancel error:', e)
+      setCancelError('Something went wrong canceling the subscription')
+    }
+    setCancelingUserId(null)
   }
 
   function handleLogout() {
@@ -305,14 +336,14 @@ export default function AdminPage() {
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, fontFamily: "'Helvetica Neue', sans-serif" }}>
                   <thead>
                     <tr style={{ background: OFF_WHITE }}>
-                      {['Name', 'Email', 'Plan', 'Visa', 'Guide', 'Onboarded', 'Joined'].map(h => (
+                      {['Name', 'Email', 'Plan', 'Visa', 'Guide', 'Onboarded', 'Joined', 'Actions'].map(h => (
                         <th key={h} style={{ padding: '10px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: MUTED, textTransform: 'uppercase', letterSpacing: '0.05em', borderBottom: `1px solid ${BORDER}`, whiteSpace: 'nowrap' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {filteredUsers.length === 0 ? (
-                      <tr><td colSpan={7} style={{ padding: '24px 16px', textAlign: 'center', color: MUTED }}>No users in this category.</td></tr>
+                      <tr><td colSpan={8} style={{ padding: '24px 16px', textAlign: 'center', color: MUTED }}>No users in this category.</td></tr>
                     ) : filteredUsers.map((user, i) => (
                       <tr key={user.id} style={{ borderBottom: `1px solid ${BORDER}`, background: i % 2 === 0 ? '#fff' : OFF_WHITE }}>
                         <td style={{ padding: '10px 16px', color: DARK, fontWeight: 500 }}>{user.full_name || '—'}</td>
@@ -331,6 +362,16 @@ export default function AdminPage() {
                         </td>
                         <td style={{ padding: '10px 16px', color: MUTED, whiteSpace: 'nowrap' }}>
                           {formatDate(user.created_at)}
+                        </td>
+                        <td style={{ padding: '10px 16px', whiteSpace: 'nowrap' }}>
+                          {user.plan === 'pro' && (
+                            <button
+                              onClick={() => handleCancelSubscription(user.id, user.email)}
+                              disabled={cancelingUserId === user.id}
+                              style={{ padding: '5px 12px', borderRadius: 8, border: `1px solid ${DANGER}`, background: '#fff', color: DANGER, fontSize: 12, fontWeight: 600, cursor: cancelingUserId === user.id ? 'not-allowed' : 'pointer', fontFamily: "'Helvetica Neue', sans-serif", opacity: cancelingUserId === user.id ? 0.6 : 1 }}>
+                              {cancelingUserId === user.id ? 'Canceling...' : 'Cancel Sub'}
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
