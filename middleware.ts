@@ -6,7 +6,7 @@ const PROTECTED = ['/dashboard', '/chat', '/vault', '/account', '/admin']
 export function middleware(request: NextRequest) {
   const token = request.cookies.get('visado_token')?.value
   const path = request.nextUrl.pathname
-  const isProtected = PROTECTED.some(p => path.startsWith(p))
+  const isProtected = path !== '/admin/login' && PROTECTED.some(p => path.startsWith(p))
   if (isProtected && !token) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
