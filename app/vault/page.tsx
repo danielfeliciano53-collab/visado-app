@@ -234,10 +234,9 @@ export default function VaultPage() {
       if (metadataForm.issue_date) formData.append('issue_date', metadataForm.issue_date)
       if (metadataForm.notes) formData.append('notes', metadataForm.notes)
 
-      const token = document.cookie.match(/(?:^|; )visado_token=([^;]*)/)?.[1]
-      const res = await fetch('https://visado-backend.vercel.app/api/vault/upload', {
+      const res = await fetch('/api/vault/upload', {
         method: 'POST',
-        headers: { Authorization: `Bearer ${decodeURIComponent(token || '')}` },
+        credentials: 'same-origin',
         body: formData,
       })
 

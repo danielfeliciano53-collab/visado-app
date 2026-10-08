@@ -3,15 +3,13 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 
-const BACKEND_URL = 'https://visado-backend.vercel.app'
-
 const NAVY = '#1B2F6E'
 const NAVY_DARK = '#111E47'
 const GOLD = '#C9942A'
 const GOLD_LIGHT = '#FBF3E2'
 
-function setCookie(name: string, value: string) {
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=604800; SameSite=Lax; Secure`
+function setUserCookie(value: string) {
+  document.cookie = `visado_user=${encodeURIComponent(value)}; path=/; max-age=604800; SameSite=Lax; Secure`
 }
 
 export default function LoginPage() {
@@ -49,7 +47,7 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
     try {
-      const res = await fetch(`${BACKEND_URL}/api/login`, {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -58,8 +56,7 @@ export default function LoginPage() {
       if (!res.ok || data.error) {
         setError(data.error || 'Incorrect email or password.')
       } else {
-        setCookie('visado_token', data.token || data.access_token)
-        setCookie('visado_user', JSON.stringify(data.user))
+        setUserCookie(JSON.stringify(data.user))
         if (!data.onboardingComplete) {
           router.push('/onboarding')
           return
@@ -79,7 +76,7 @@ export default function LoginPage() {
     setError('')
     setSuccess('')
     try {
-      const res = await fetch(`${BACKEND_URL}/api/signup`, {
+      const res = await fetch('/api/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password, full_name: name }),

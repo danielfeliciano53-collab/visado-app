@@ -2,10 +2,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
-const BACKEND_URL = 'https://visado-backend.vercel.app'
-
-function setCookie(name: string, value: string) {
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=604800; SameSite=Lax; Secure`
+function setUserCookie(value: string) {
+  document.cookie = `visado_user=${encodeURIComponent(value)}; path=/; max-age=604800; SameSite=Lax; Secure`
 }
 
 export default function AuthCallbackPage() {
@@ -24,7 +22,7 @@ export default function AuthCallbackPage() {
       }
 
       try {
-        const res = await fetch(`${BACKEND_URL}/api/auth/google-session`, {
+        const res = await fetch('/api/auth/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token: accessToken }),
@@ -34,8 +32,7 @@ export default function AuthCallbackPage() {
           setError(data.error || 'Google sign-in failed. Please try again.')
           return
         }
-        setCookie('visado_token', data.token)
-        setCookie('visado_user', JSON.stringify(data.user))
+        setUserCookie(JSON.stringify(data.user))
         if (!data.onboardingComplete) {
           router.push('/onboarding')
           return

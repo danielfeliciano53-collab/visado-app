@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  async rewrites() {
+    return {
+      afterFiles: [
+        {
+          source: '/api/:path*',
+          destination: 'https://visado-backend.vercel.app/api/:path*',
+        },
+      ],
+    }
+  },
 };
 
 export default nextConfig;
